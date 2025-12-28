@@ -2,13 +2,13 @@
 
 一款基于 PySide6 开发的桌面宠物程序，以可爱的晴天娃娃为视觉形象，提供丰富的桌面交互、截图工具及实用小功能，为你的桌面增添一份趣味与便捷。
 
-![屏幕截图 2025-12-28 200254](image\run\屏幕截图 2025-12-28 200254.png)
+![屏幕截图 2025-12-28 200254](https://github.com/YuShengHuan/Python-Desktop-Pet/blob/main/image/run/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-12-28%20200128.png)
 
 ## 项目介绍
 
 本桌宠以经典晴天娃娃为呈现形象，悬浮于桌面之上，支持右键菜单触发各类功能，兼具观赏性与实用性。核心基于 PySide6 框架构建，跨 Windows 平台兼容，操作简单，界面简洁可爱。
 
-![image-20251228184204713](image\run\image-20251228184204713.png)
+![image-20251228184204713](https://github.com/YuShengHuan/Python-Desktop-Pet/blob/main/image/run/image-20251228184204713.png)
 
 ## 功能列表
 
@@ -28,7 +28,7 @@
 
 7. **退出程序**：关闭晴天娃娃桌宠，退出当前程序
 
-   ![image-20251228184232712](image\run\image-20251228184232712.png)
+   ![image-20251228184232712](https://github.com/YuShengHuan/Python-Desktop-Pet/blob/main/image/run/image-20251228184232712.png)
 
 ## 运行环境
 
