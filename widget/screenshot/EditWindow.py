@@ -5,6 +5,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
+from widget.screenshot.custom.CustomGraphicsPixmapItem import CustomGraphicsPixmapItem
 from widget.screenshot.custom.CustomGraphicsTextItem import CustomGraphicsTextItem
 # 注意：请确保这两个自定义对话框的路径正确
 from widget.screenshot.dialog.PenStyleDialog import PenStyleDialog
@@ -331,6 +332,23 @@ class EditWindow(QWidget):
         self.add_text_btn.clicked.connect(self.add_text_to_scene)
         self.top_toolbar.addWidget(self.add_text_btn)
 
+        def add_pixmap_to_scene():
+            file_img_path=self.select_image()
+            if not file_img_path:
+                return
+            self.pixmap_item = CustomGraphicsPixmapItem(QPixmap(file_img_path))
+            self.pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            self.pixmap_item.setFlags(
+                QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
+            )
+            self.pixmap_item.setZValue(10)
+            self.scene.addItem(self.pixmap_item)
+        self.add_pixmap_btn = QPushButton("添加图片")
+        self.add_pixmap_btn.setFixedSize(80, 30)
+        self.add_pixmap_btn.setObjectName("add_pixmap_btn")
+        self.add_pixmap_btn.clicked.connect(add_pixmap_to_scene)
+        self.top_toolbar.addWidget(self.add_pixmap_btn)
+
         self.del_text_btn = QPushButton("删除选中")
         self.del_text_btn.setFixedSize(100, 30)
         self.del_text_btn.setObjectName("del_text_btn")
@@ -408,7 +426,7 @@ class EditWindow(QWidget):
         # 文字
         self.view = None
         self.scene = None
-        self.pixmap_item = None
+        self.main_pixmap_item = None
         self.screenshot_pixmap = QPixmap(500, 500)
         self.img_width = 0
         self.img_height = 0
@@ -468,8 +486,7 @@ class EditWindow(QWidget):
     def set_custom_pen(self, pen: QPen):
         # 更新当前画笔
         self.draw_pen = pen
-
-    def load_picture_to_view(self):
+    def select_image(self):
         file_img_path, _ = QFileDialog.getOpenFileName(
             parent=self,
             caption="选择图片文件",
@@ -480,7 +497,13 @@ class EditWindow(QWidget):
         if not file_img_path:
             return
         self.add_file_dir = os.path.dirname(file_img_path)
+        return file_img_path
 
+    def load_picture_to_view(self):
+        # 若用户取消选择，直接返回
+        file_img_path=self.select_image()
+        if not file_img_path:
+            return
         self.load_screenshot_pixmap(
             QPixmap(file_img_path)
         )
@@ -580,19 +603,19 @@ class EditWindow(QWidget):
         self.scene.clear()
 
         # 3. 创建新的图片项并添加到场景
-        self.pixmap_item = QGraphicsPixmapItem(self.screenshot_pixmap)
-        self.pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-        self.pixmap_item.setPos(0, 0)  # 强制图片在场景原点
-        self.scene.addItem(self.pixmap_item)
+        self.main_pixmap_item = QGraphicsPixmapItem(self.screenshot_pixmap)
+        self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+        self.main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
+        self.scene.addItem(self.main_pixmap_item)
 
-        self.scene.setSceneRect(self.pixmap_item.boundingRect())
+        self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
 
         # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
-        self.scene.setSceneRect(self.pixmap_item.boundingRect())
+        self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
         # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
         self.view.resetTransform()
         # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-        self.view.fitInView(self.pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self.view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def _on_wheel_scroll(self, event):
         """滚轮缩放视图"""
@@ -760,4 +783,3 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制原粉色半透明矩形
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
-
