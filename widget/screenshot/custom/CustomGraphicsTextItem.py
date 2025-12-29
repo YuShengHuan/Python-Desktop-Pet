@@ -24,7 +24,8 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
 
         op = QStyleOptionGraphicsItem(option)
         if op.state & QStyle.StateFlag.State_Selected:
-            op.state = QStyle.StateFlag.State_None
+            if self.open_edit:
+               op.state = QStyle.StateFlag.State_None
 
         super().paint(painter, op, widget)
 
@@ -41,6 +42,7 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
             self.open_edit = False
             self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
             self.setCursor(Qt.CursorShape.OpenHandCursor)
+        self.update()
 
     def mouse_leave_range(self):
         self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
@@ -63,17 +65,18 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
         doc = self.document()
         cursor = QTextCursor(doc)
 
-        if self._is_item_selected:
-            # 应用到选中的文本片段
-            text_cursor = self.textCursor()
-            cursor.setPosition(text_cursor.selectionStart())
-            cursor.setPosition(text_cursor.selectionEnd(), QTextCursor.MoveMode.KeepAnchor)
-        else:
-            # 应用到全部文本
-            cursor.select(QTextCursor.SelectionType.Document)
+        text_cursor = self.textCursor()
+        if self.open_edit:
+            if self._is_item_selected:
+                # 应用到选中的文本片段
+                cursor.setPosition(text_cursor.selectionStart())
+                cursor.setPosition(text_cursor.selectionEnd(), QTextCursor.MoveMode.KeepAnchor)
+            else:
+                #关键：将目标光标同步到当前真实光标位置（不选中任何内容，仅定位）
+                cursor.setPosition(text_cursor.position(),QTextCursor.MoveMode.MoveAnchor)
 
-        # 合并样式
         cursor.mergeCharFormat(format)
         doc.setModified(True)
-        self.setDocument(doc)
+        self.setTextCursor(cursor)
+
         self.update()

@@ -8,7 +8,6 @@ from PySide6.QtGui import QPen, QColor, QMouseEvent, QFont, QTextCharFormat, QPi
 from PySide6.QtCore import Qt, Signal, QPoint
 
 
-
 class TextCharFormatDialog(QDialog):
     # 定义信号，返回选中的画笔
     text_char_format_confirmed = Signal(QTextCharFormat)
@@ -43,6 +42,7 @@ class TextCharFormatDialog(QDialog):
             self.drag_state["is_moving"] = False
             # 释放时再次触发吸附（确保最终位置贴边）
             event.accept()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 抗锯齿，让文字更平滑
@@ -55,6 +55,7 @@ class TextCharFormatDialog(QDialog):
             # 图片加载失败时，降级绘制原粉色半透明矩形
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
+
     def __init__(self, initial_text_char_format: QTextCharFormat, parent=None):
         super().__init__(parent)
         self.bg_pixmap = QPixmap()
@@ -194,21 +195,21 @@ class TextCharFormatDialog(QDialog):
             "font_italic": initial_text_char_format.font().italic(),
             "underline_style": initial_text_char_format.underlineStyle(),  # 下划线样式
             "underline_color": initial_text_char_format.underlineColor(),  # 下划线颜色
-            "font_strikeout": initial_text_char_format.fontStrikeOut(),        # 删除线
-            "font_overline": initial_text_char_format.fontOverline(),          # 上划线
+            "font_strikeout": initial_text_char_format.fontStrikeOut(),  # 删除线
+            "font_overline": initial_text_char_format.fontOverline(),  # 上划线
             "font_color": initial_text_char_format.foreground().color(),
-            "bg_color": initial_text_char_format.background().color(),     # 文字背景色
-            "vertical_align": initial_text_char_format.verticalAlignment(),# 上下标
-            "letter_spacing": initial_text_char_format.fontLetterSpacing(), # 字符间距
-            "font_capitalization": initial_text_char_format.font().capitalization() # 大写样式
+            "bg_color": initial_text_char_format.background().color(),  # 文字背景色
+            "vertical_align": initial_text_char_format.verticalAlignment(),  # 上下标
+            "letter_spacing": initial_text_char_format.fontLetterSpacing(),  # 字符间距
+            "font_capitalization": initial_text_char_format.font().capitalization()  # 大写样式
         }
 
         self.init_ui()
 
     def init_ui(self):
-        main_layout=QVBoxLayout()
+        main_layout = QVBoxLayout()
         main_layout.setSpacing(10)
-        main_layout.setContentsMargins(0, 0, 0,0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
         top_window_bar = QHBoxLayout()
         top_window_bar.setSpacing(10)
@@ -264,7 +265,6 @@ class TextCharFormatDialog(QDialog):
         self.italic_btn.setObjectName("italic_btn")
         b_i_u_layout.addWidget(self.italic_btn)
 
-
         # ========== 新增：删除线、上划线复选框 ==========
         self.strikeout_btn = QCheckBox("删除线")
         self.strikeout_btn.setChecked(self.current_style["font_strikeout"])
@@ -284,7 +284,7 @@ class TextCharFormatDialog(QDialog):
         underline_style_layout = QHBoxLayout()
         underline_style_layout.addWidget(QLabel("下划线样式："))
         self.underline_style_combo = QComboBox()
-        self.underline_style_combo.addItems(["无下划线","单下划线", "双下划线","段下划线" ,"点划线"])
+        self.underline_style_combo.addItems(["无下划线", "单下划线", "双下划线", "段下划线", "点划线"])
         # 映射初始值
         style_map = {
             QTextCharFormat.UnderlineStyle.NoUnderline: 0,
@@ -299,10 +299,9 @@ class TextCharFormatDialog(QDialog):
         layout.addLayout(underline_style_layout)
 
         # 4. 文字颜色选择（原有不变）
-        all_color_layout_contain=QHBoxLayout()
+        all_color_layout_contain = QHBoxLayout()
         all_color_layout_contain.setSpacing(10)
         all_color_layout_contain.addWidget(QLabel("颜色："))
-
 
         all_color_layout = QHBoxLayout()
         # ========== 新增：划线颜色选择 ==========
@@ -315,7 +314,6 @@ class TextCharFormatDialog(QDialog):
             f"background-color: {self.current_style['underline_color'].name()}; border: 1px solid #ccc;")
         underline_color_layout.addWidget(self.underline_color_btn)
         all_color_layout.addLayout(underline_color_layout)
-
 
         color_layout = QHBoxLayout()
         color_layout.addWidget(QLabel("文字颜色"))
@@ -380,14 +378,14 @@ class TextCharFormatDialog(QDialog):
         self.font_family.currentFontChanged.connect(self._update_font_family)
         self.bold_btn.toggled.connect(self._update_font_bold)
         self.italic_btn.toggled.connect(self._update_font_italic)
-        self.color_btn.clicked.connect(self.choose_color)
+        self.color_btn.clicked.connect(self._update_text_color)
 
         # ========== 新增：绑定新属性的事件 ==========
         self.strikeout_btn.toggled.connect(self._update_font_strikeout)
         self.overline_btn.toggled.connect(self._update_font_overline)
         self.underline_style_combo.currentIndexChanged.connect(self._update_underline_style)
-        self.underline_color_btn.clicked.connect(self.choose_underline_color)
-        self.bg_color_btn.clicked.connect(self.choose_bg_color)
+        self.underline_color_btn.clicked.connect(self._update_underline_color)
+        self.bg_color_btn.clicked.connect(self._update_bg_color)
         self.vertical_align_combo.currentIndexChanged.connect(self._update_vertical_align)
 
     def __update_text(self):
@@ -410,12 +408,12 @@ class TextCharFormatDialog(QDialog):
         self.current_style["font_italic"] = is_italic
         self.update_selected_text_style()
 
-    def choose_color(self):
+    def _update_text_color(self):
         color = QColorDialog.getColor(self.current_style["font_color"], self, "选择文字颜色")
         if color.isValid():
             self.current_style["font_color"] = color
         else:
-            self.current_style["bg_color"]=QColor(Qt.GlobalColor.transparent)
+            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
         self.update_selected_text_style()
         self.color_btn.setStyleSheet(
             f"background-color: {self.current_style['font_color'].name()}; border: 1px solid #ccc;")
@@ -431,31 +429,31 @@ class TextCharFormatDialog(QDialog):
 
     def _update_underline_style(self, index):
         style_map = {
-            0:QTextCharFormat.UnderlineStyle.NoUnderline,
-            1:QTextCharFormat.UnderlineStyle.SingleUnderline,
-            2:QTextCharFormat.UnderlineStyle.SpellCheckUnderline,
-            3:QTextCharFormat.UnderlineStyle.DashUnderline,
-            4:QTextCharFormat.UnderlineStyle.DotLine
+            0: QTextCharFormat.UnderlineStyle.NoUnderline,
+            1: QTextCharFormat.UnderlineStyle.SingleUnderline,
+            2: QTextCharFormat.UnderlineStyle.SpellCheckUnderline,
+            3: QTextCharFormat.UnderlineStyle.DashUnderline,
+            4: QTextCharFormat.UnderlineStyle.DotLine
         }
         self.current_style["underline_style"] = style_map[index]
         self.update_selected_text_style()
 
-    def choose_underline_color(self):
+    def _update_underline_color(self):
         color = QColorDialog.getColor(self.current_style["underline_color"], self, "选择划线颜色")
         if color.isValid():
             self.current_style["underline_color"] = color
         else:
-            self.current_style["bg_color"]=QColor(Qt.GlobalColor.transparent)
+            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
         self.update_selected_text_style()
         self.underline_color_btn.setStyleSheet(
             f"background-color: {self.current_style['underline_color'].name()}; border: 1px solid #ccc;")
 
-    def choose_bg_color(self):
+    def _update_bg_color(self):
         color = QColorDialog.getColor(self.current_style["bg_color"], self, "选择文字背景色")
         if color.isValid():
             self.current_style["bg_color"] = color
         else:
-            self.current_style["bg_color"]=QColor(Qt.GlobalColor.transparent)
+            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
         self.update_selected_text_style()
         self.bg_color_btn.setStyleSheet(
             f"background-color: {self.current_style['bg_color'].name()}; border: 1px solid #ccc;")
@@ -468,7 +466,6 @@ class TextCharFormatDialog(QDialog):
         }
         self.current_style["vertical_align"] = align_map[index]
         self.update_selected_text_style()
-
 
     def update_selected_text_style(self):
         self.text_char_format_changed.emit(self._create_char_format())
@@ -499,8 +496,10 @@ class TextCharFormatDialog(QDialog):
         return self.char_format
 
     def on_ok(self):
-        self.text_char_format_confirmed.emit(self._create_char_format())
+        text_char_format = self._create_char_format()
+        self.text_char_format_confirmed.emit(text_char_format)
         self.accept()  # 关闭对话框
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

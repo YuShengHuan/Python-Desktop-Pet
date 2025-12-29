@@ -569,7 +569,7 @@ class EditWindow(QWidget):
             def view_mouseMoveEvent(self_, event: QMouseEvent):
                 self.end_pos = self.view.mapToScene(event.position().toPoint())
                 if event.buttons() & Qt.MouseButton.LeftButton and self.current_mode:
-                    # 手绘/橡皮擦
+                    # 手绘
                     if self.current_mode == "draw":
                         self.current_draw_path.lineTo(self.end_pos)
                         self.current_draw_item.setPath(self.current_draw_path)
@@ -783,3 +783,7 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制原粉色半透明矩形
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())
