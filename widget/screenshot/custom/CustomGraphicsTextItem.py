@@ -62,11 +62,10 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
 
     def apply_style_to_selected(self, format: QTextCharFormat):
         """应用样式到文本（PySide6原生API）"""
-        doc = self.document()
-        cursor = QTextCursor(doc)
-
-        text_cursor = self.textCursor()
         if self.open_edit:
+            doc = self.document()
+            cursor = QTextCursor(doc)
+            text_cursor = self.textCursor()
             if self._is_item_selected:
                 # 应用到选中的文本片段
                 cursor.setPosition(text_cursor.selectionStart())
@@ -74,9 +73,7 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
             else:
                 #关键：将目标光标同步到当前真实光标位置（不选中任何内容，仅定位）
                 cursor.setPosition(text_cursor.position(),QTextCursor.MoveMode.MoveAnchor)
-
-        cursor.mergeCharFormat(format)
-        doc.setModified(True)
-        self.setTextCursor(cursor)
-
-        self.update()
+            cursor.mergeCharFormat(format)
+            doc.setModified(True)
+            self.setTextCursor(cursor)
+            self.update()
