@@ -1,7 +1,7 @@
 1. # 晴天娃娃桌宠
 
    一款基于 PySide6 开发的桌面宠物程序，以可爱的晴天娃娃为视觉形象，提供丰富的桌面交互、截图工具及实用小功能，为你的桌面增添一份趣味与便捷。
-    ![image-20251228184204713](https://github.com/YuShengHuan/Python-Desktop-Pet/blob/main/image/run/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-12-28%20200128.png)
+    ![image-20251228184204713](https://github.com/YuShengHuan/Python-Desktop-Pet/blob/main/image/run/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-12-28%20200214.png)
 
    ## 项目介绍
 
