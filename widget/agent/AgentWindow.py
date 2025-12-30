@@ -136,11 +136,11 @@ class AgentWindow(QWidget):
         self.top_window_bar.setContentsMargins(5, 0, 0, 0)
         self.top_window_bar.setSpacing(10)
 
+
         self.title_label = QLabel()
         self.title_label.setText("")
         self.title_label.setObjectName("title_label")
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.title_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         def title_label_mousePressEvent(self_, event):
             if self.frame:
@@ -149,13 +149,6 @@ class AgentWindow(QWidget):
             QLabel.mousePressEvent(self_, event)
 
         self.title_label.mousePressEvent = lambda event: title_label_mousePressEvent(self.title_label, event)
-        self.title_label.setStyleSheet(
-            """
-            QLabel{
-                 font-size:10px;
-            }
-            """
-        )
         self.top_window_bar.addWidget(
             self.title_label
         )
@@ -182,11 +175,12 @@ class AgentWindow(QWidget):
                         """)
         self.richtext_edit.setPlaceholderText("")
         self.richtext_edit.setReadOnly(True)
+        self.richtext_edit.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
 
-        middle_layout.addWidget(self.richtext_edit)
+        middle_layout.addWidget(self.richtext_edit,stretch=1)
 
         self.main_layout.addLayout(
-            middle_layout
+            middle_layout,stretch=1
         )
 
         self.frame = QFrame()
@@ -236,6 +230,7 @@ class AgentWindow(QWidget):
             self.frame
         )
         self.frame.hide()
+        self.setLayout(self.main_layout)
 
         def custom_focus_in_event(self_, event: QFocusEvent):
             self.frame.show()
@@ -324,9 +319,11 @@ class AgentWindow(QWidget):
                 row
             )
         if self.isHidden():
-            top_window_g = WindowStatic.get_top_window().geometry()
-            self.move(
-                top_window_g.x() - self.width(),
-                top_window_g.y() + int(top_window_g.height() / 2) - self.height()
-            )
             self.show()
+        top_window_g = WindowStatic.get_top_window().geometry()
+        self.move(
+            top_window_g.x() - self.width(),
+            top_window_g.y() + int(top_window_g.height() / 2) - self.height()
+        )
+
+

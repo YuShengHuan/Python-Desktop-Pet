@@ -783,7 +783,3 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制原粉色半透明矩形
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
-app = QApplication(sys.argv)
-w = EditWindow()
-w.show()
-sys.exit(app.exec())
