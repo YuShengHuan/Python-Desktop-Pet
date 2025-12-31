@@ -1,17 +1,13 @@
-import threading
-
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from pynput import keyboard
 
 from widget.agent.AgentWindow import AgentWindow
 from widget.offwork.OffWorkWindow import OffWorkWindow
 from widget.role.RoleGifManagement import RoleGifManagement
 from widget.role.RoleInteractManagement import RoleInteractManagement
-from widget.screenshot.HotkeyWorker import HotkeyWorker
+from widget.role.HotkeyWorker import HotkeyWorker
 from widget.screenshot.ScreenshotEdit import ScreenshotEdit
-from widget.util import WindowStatic
 
 
 class CentralWidget(QWidget):
