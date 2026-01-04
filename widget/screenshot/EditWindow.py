@@ -303,6 +303,38 @@ class EditWindow(QWidget):
         """)
         self.top_operatebar.addWidget(self.status_show_label)
 
+        self.top_operatebar.addStretch()
+
+        self.text_style_btn = QPushButton("文字样式")
+        self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
+        self.text_style_btn.setFixedSize(100, 30)
+        self.text_style_btn.setObjectName("pen_style_btn")
+        self.text_style_btn.clicked.connect(self.open_text_char_format_dialog)
+        self.top_operatebar.addWidget(self.text_style_btn)
+
+
+        self.pen_style_btn = QPushButton("画笔样式")
+        self.pen_style_btn.setFixedSize(100, 30)
+        self.pen_style_btn.setObjectName("pen_style_btn")
+        self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
+        self.pen_style_btn.clicked.connect(self.open_pen_style_dialog)
+        self.top_operatebar.addWidget(self.pen_style_btn)
+
+
+        self.save_picture_btn = QPushButton("保存图片")
+        self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
+        self.save_picture_btn.setFixedSize(100, 30)
+        self.save_picture_btn.clicked.connect(self.save_image)
+        self.save_picture_btn.setObjectName("save_btn")
+        self.top_operatebar.addWidget(self.save_picture_btn)
+
+        self.copy_picture_btn = QPushButton("复制图片")
+        self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
+        self.copy_picture_btn.setFixedSize(100, 30)
+        self.copy_picture_btn.setObjectName("copy_btn")
+        self.copy_picture_btn.clicked.connect(self.copy_image)
+        self.top_operatebar.addWidget(self.copy_picture_btn)
+
         def status_show_btn_paintEvent(self_, event):
             painter = QPainter(self_)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 抗锯齿，让文字更平滑
@@ -384,7 +416,8 @@ class EditWindow(QWidget):
         self.del_text_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_text_btn)
 
-        # ============ 以下是纯新增按钮（形状+画笔+橡皮擦） ============
+
+        # ============ 以下是纯新增按钮（形状+画笔） ============
         self.model_type = {
             "画笔": "draw",
             "矩形": "rect",
@@ -416,49 +449,6 @@ class EditWindow(QWidget):
         self.top_toolbar.addWidget(self.line_btn)
 
         self.tool_container_layout.addLayout(self.top_toolbar)
-
-        # ------ 下工具栏：属性设置（文字属性） ------
-        self.frame_pen = QFrame()
-        self.bottom_toolbar = QHBoxLayout()
-        self.bottom_toolbar.setContentsMargins(0, 0, 0, 0)
-        self.bottom_toolbar.setSpacing(10)
-        self.bottom_toolbar.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        self.text_style_btn = QPushButton("文字样式")
-        self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
-        self.text_style_btn.setFixedSize(100, 30)
-        self.text_style_btn.setObjectName("pen_style_btn")
-        self.text_style_btn.clicked.connect(self.open_text_char_format_dialog)
-        self.bottom_toolbar.addWidget(self.text_style_btn)
-
-        self.frame_pen.setLayout(self.bottom_toolbar)
-
-        self.pen_style_btn = QPushButton("画笔样式")
-        self.pen_style_btn.setFixedSize(100, 30)
-        self.pen_style_btn.setObjectName("pen_style_btn")
-        self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
-        self.pen_style_btn.clicked.connect(self.open_pen_style_dialog)
-        self.bottom_toolbar.addWidget(self.pen_style_btn)
-
-        self.bottom_toolbar.addStretch()
-
-        self.save_picture_btn = QPushButton("保存图片")
-        self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
-        self.save_picture_btn.setFixedSize(100, 30)
-        self.save_picture_btn.clicked.connect(self.save_image)
-        self.save_picture_btn.setObjectName("save_btn")
-        self.bottom_toolbar.addWidget(self.save_picture_btn)
-
-        self.copy_picture_btn = QPushButton("复制图片")
-        self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
-        self.copy_picture_btn.setFixedSize(100, 30)
-        self.copy_picture_btn.setObjectName("copy_btn")
-        self.copy_picture_btn.clicked.connect(self.copy_image)
-        self.bottom_toolbar.addWidget(self.copy_picture_btn)
-
-        self.frame_pen.setLayout(self.bottom_toolbar)
-
-        self.tool_container_layout.addWidget(self.frame_pen)
 
         # 文字
         self.view = None
@@ -501,24 +491,22 @@ class EditWindow(QWidget):
 
     def open_text_char_format_dialog(self):
         dialog = TextCharFormatDialog(self.text_char_format, self)
-        dialog.text_char_format_confirmed.connect(self.set_text_char_format)
+        dialog.text_char_format_confirmed.connect(self.update_selected_text_style)
         dialog.text_char_format_changed.connect(self.update_selected_text_style)
         dialog.move(QCursor.pos())
         dialog.exec()
 
-    def set_text_char_format(self, text_char_format: QTextCharFormat):
-        self.text_char_format = text_char_format
 
     def open_pen_style_dialog(self):
         # 创建自定义画笔对话框，传入当前画笔
         dialog = PenStyleDialog(self.draw_pen, self)
         # 绑定确认信号
-        dialog.pen_confirmed.connect(self.set_custom_pen)
+        dialog.pen_confirmed.connect(self.update_custom_pen)
         # 显示对话框
         dialog.move(QCursor.pos())
         dialog.exec()
 
-    def set_custom_pen(self, pen: QPen):
+    def update_custom_pen(self, pen: QPen):
         # 更新当前画笔
         self.draw_pen = pen
 
@@ -838,6 +826,10 @@ class EditWindow(QWidget):
             painter.setOpacity(0.8)  # 图片透明度（0-1，0全透，1不透明）
             painter.drawPixmap(self.rect(), self.bg_pixmap)
         else:
-            # 图片加载失败时，降级绘制原粉色半透明矩形
+            # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())
