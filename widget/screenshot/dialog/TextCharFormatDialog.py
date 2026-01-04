@@ -284,7 +284,7 @@ class TextCharFormatDialog(QDialog):
         underline_style_layout = QHBoxLayout()
         underline_style_layout.addWidget(QLabel("下划线样式："))
         self.underline_style_combo = QComboBox()
-        self.underline_style_combo.addItems(["无下划线", "单下划线", "双下划线", "段下划线", "点划线"])
+        self.underline_style_combo.addItems(["无下划线", "单下划线", "波浪下划线", "段下划线", "点划线"])
         # 映射初始值
         style_map = {
             QTextCharFormat.UnderlineStyle.NoUnderline: 0,

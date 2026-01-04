@@ -17,19 +17,6 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
         # 选中状态标记
         self._is_item_selected = False
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget = None) -> None:
-        """重写paint，移除选中时的虚线边框"""
-        if option is None:
-            option = QStyleOptionGraphicsItem()
-            option.initFrom(widget)
-
-        op = QStyleOptionGraphicsItem(option)
-        if op.state & QStyle.StateFlag.State_Selected:
-            if not self.open_edit:
-                op.state = QStyle.StateFlag.State_None
-
-        super().paint(painter, op, widget)
-
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.setSelected(True)
         super().mousePressEvent(event)  # 保证文本选中功能正常

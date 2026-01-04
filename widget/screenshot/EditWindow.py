@@ -92,6 +92,7 @@ class EditWindow(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.resize_direction = None
         self.add_file_dir = "."
         self.bg_pixmap = QPixmap()
         # 替换为你的图片路径（绝对路径/相对路径均可，支持png/jpg等格式）
@@ -104,6 +105,7 @@ class EditWindow(QWidget):
                 Qt.TransformationMode.SmoothTransformation  # 平滑缩放，抗锯齿
             )
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
+        #self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(self.width(), 500)
         self.setObjectName("editWindow")
 
@@ -118,7 +120,7 @@ class EditWindow(QWidget):
                     /* 通用按钮样式 */
                     QPushButton {
                         border: none;
-                        border-radius: 6px;
+                        border-radius: none;
                         font-family: "Microsoft YaHei";
                         font-size: 14px;
                         color: white;
@@ -156,13 +158,13 @@ class EditWindow(QWidget):
                         background-color: #3eb8b0;
                     }
 
-                    #del_text_btn {
+                    #clear_picture_btn,#del_text_btn {
                         background-color: #ff6b6b;
                     }
-                    #del_text_btn:hover {
+                    #clear_picture_btn:hover,#del_text_btn:hover {
                         background-color: #ff8787;
                     }
-                    #del_text_btn:pressed {
+                    #clear_picture_btn:pressed,#del_text_btn:pressed {
                         background-color: #e55353;
                     }
 
@@ -346,8 +348,9 @@ class EditWindow(QWidget):
         self.top_toolbar.addWidget(self.text_edit)
 
         self.add_text_btn = QPushButton("添加文字")
-        self.add_text_btn.setFixedSize(80, 30)
+        self.add_text_btn.setFixedSize(90, 30)
         self.add_text_btn.setObjectName("add_text_btn")
+        self.add_text_btn.setIcon(QIcon("image/icon/add_text_btn.png"))
         self.add_text_btn.clicked.connect(self.add_text_to_scene)
         self.top_toolbar.addWidget(self.add_text_btn)
 
@@ -367,15 +370,17 @@ class EditWindow(QWidget):
             pixmap_item.setZValue(10)
             self.scene.addItem(pixmap_item)
 
-        self.add_pixmap_btn = QPushButton("添加图片")
-        self.add_pixmap_btn.setFixedSize(80, 30)
-        self.add_pixmap_btn.setObjectName("add_pixmap_btn")
-        self.add_pixmap_btn.clicked.connect(add_pixmap_to_scene)
-        self.top_toolbar.addWidget(self.add_pixmap_btn)
+        self.add_picture_btn = QPushButton("添加图片")
+        self.add_picture_btn.setFixedSize(90, 30)
+        self.add_picture_btn.setObjectName("add_pixmap_btn")
+        self.add_picture_btn.setIcon(QIcon("image/icon/add_picture_btn.png"))
+        self.add_picture_btn.clicked.connect(add_pixmap_to_scene)
+        self.top_toolbar.addWidget(self.add_picture_btn)
 
         self.del_text_btn = QPushButton("删除选中")
         self.del_text_btn.setFixedSize(100, 30)
         self.del_text_btn.setObjectName("del_text_btn")
+        self.del_text_btn.setIcon(QIcon("image/icon/del_text_btn.png"))
         self.del_text_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_text_btn)
 
@@ -387,21 +392,25 @@ class EditWindow(QWidget):
             "直线": "line"
         }
         self.pen_btn = QPushButton("画笔")
+        self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
         self.pen_btn.setFixedSize(65, 30)
         self.pen_btn.clicked.connect(lambda: self.switch_mode("draw"))
         self.top_toolbar.addWidget(self.pen_btn)
 
         self.rect_btn = QPushButton("矩形")
+        self.rect_btn.setIcon(QIcon("image/icon/rect_btn.png"))
         self.rect_btn.setFixedSize(65, 30)
         self.rect_btn.clicked.connect(lambda: self.switch_mode("rect"))
         self.top_toolbar.addWidget(self.rect_btn)
 
         self.circle_btn = QPushButton("圆形")
+        self.circle_btn.setIcon(QIcon("image/icon/circle_btn.png"))
         self.circle_btn.setFixedSize(65, 30)
         self.circle_btn.clicked.connect(lambda: self.switch_mode("ellipse"))
         self.top_toolbar.addWidget(self.circle_btn)
 
         self.line_btn = QPushButton("直线")
+        self.line_btn.setIcon(QIcon("image/icon/line_btn.png"))
         self.line_btn.setFixedSize(65, 30)
         self.line_btn.clicked.connect(lambda: self.switch_mode("line"))
         self.top_toolbar.addWidget(self.line_btn)
@@ -415,33 +424,37 @@ class EditWindow(QWidget):
         self.bottom_toolbar.setSpacing(10)
         self.bottom_toolbar.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        self.text_style_btn = QPushButton("选择文字样式")
-        self.text_style_btn.setFixedSize(115, 30)
+        self.text_style_btn = QPushButton("文字样式")
+        self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
+        self.text_style_btn.setFixedSize(100, 30)
         self.text_style_btn.setObjectName("pen_style_btn")
         self.text_style_btn.clicked.connect(self.open_text_char_format_dialog)
         self.bottom_toolbar.addWidget(self.text_style_btn)
 
         self.frame_pen.setLayout(self.bottom_toolbar)
 
-        self.pen_style_btn = QPushButton("选择画笔样式")
-        self.pen_style_btn.setFixedSize(115, 30)
+        self.pen_style_btn = QPushButton("画笔样式")
+        self.pen_style_btn.setFixedSize(100, 30)
         self.pen_style_btn.setObjectName("pen_style_btn")
+        self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
         self.pen_style_btn.clicked.connect(self.open_pen_style_dialog)
         self.bottom_toolbar.addWidget(self.pen_style_btn)
 
         self.bottom_toolbar.addStretch()
 
-        self.save_btn = QPushButton("保存图片")
-        self.save_btn.setFixedSize(100, 30)
-        self.save_btn.clicked.connect(self.save_image)
-        self.save_btn.setObjectName("save_btn")
-        self.bottom_toolbar.addWidget(self.save_btn)
+        self.save_picture_btn = QPushButton("保存图片")
+        self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
+        self.save_picture_btn.setFixedSize(100, 30)
+        self.save_picture_btn.clicked.connect(self.save_image)
+        self.save_picture_btn.setObjectName("save_btn")
+        self.bottom_toolbar.addWidget(self.save_picture_btn)
 
-        self.copy_btn = QPushButton("复制图片")
-        self.copy_btn.setFixedSize(100, 30)
-        self.copy_btn.setObjectName("copy_btn")
-        self.copy_btn.clicked.connect(self.copy_image)
-        self.bottom_toolbar.addWidget(self.copy_btn)
+        self.copy_picture_btn = QPushButton("复制图片")
+        self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
+        self.copy_picture_btn.setFixedSize(100, 30)
+        self.copy_picture_btn.setObjectName("copy_btn")
+        self.copy_picture_btn.clicked.connect(self.copy_image)
+        self.bottom_toolbar.addWidget(self.copy_picture_btn)
 
         self.frame_pen.setLayout(self.bottom_toolbar)
 
@@ -696,6 +709,7 @@ class EditWindow(QWidget):
     def add_text_to_scene(self):
         """添加文字到图片（优化：支持即时应用当前属性）"""
         text = self.text_edit.text().strip()
+        orign_icon = self.add_text_btn.icon()
         if len(text) > 0:
             # 创建文字项
             text_item = CustomGraphicsTextItem(text)
@@ -718,7 +732,7 @@ class EditWindow(QWidget):
             self.add_text_btn.setIcon(QIcon("image/icon/success.png"))
         else:
             self.add_text_btn.setIcon(QIcon("image/icon/fail.png"))
-        QTimer.singleShot(1000, lambda: self.add_text_btn.setIcon(QIcon()))
+        QTimer.singleShot(1000, lambda: self.add_text_btn.setIcon(orign_icon))
 
     def switch_mode(self, mode):
         if self.current_mode == mode:
@@ -759,7 +773,7 @@ class EditWindow(QWidget):
         )
         if not file_path:
             return
-
+        orign_icon = self.save_picture_btn.icon()
         try:
             # 创建与场景大小一致的图片
             image = QImage(self.scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
@@ -780,14 +794,15 @@ class EditWindow(QWidget):
                 image = image.convertToFormat(QImage.Format.Format_RGB888)
             image.save(file_path)
 
-            self.save_btn.setIcon(QIcon("image/icon/success.png"))
+            self.save_picture_btn.setIcon(QIcon("image/icon/success.png"))
             print("成功", f"图片已保存到：\n{file_path}")
         except Exception as e:
-            self.save_btn.setIcon(QIcon("image/icon/fail.png"))
+            self.save_picture_btn.setIcon(QIcon("image/icon/fail.png"))
             print("错误", f"保存失败：{str(e)}")
-        QTimer.singleShot(1000, lambda: self.save_btn.setIcon(QIcon()))
+        QTimer.singleShot(1000, lambda: self.save_picture_btn.setIcon(orign_icon))
 
     def copy_image(self):
+        orign_icon=self.copy_picture_btn.icon()
         try:
             # 创建与场景大小一致的图片
             image = QImage(self.scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
@@ -806,12 +821,12 @@ class EditWindow(QWidget):
             pixmap = QPixmap.fromImage(image)  # QImage转QPixmap
             clipboard.setPixmap(pixmap)  # 写入剪贴板
 
-            self.copy_btn.setIcon(QIcon("image/icon/success.png"))
+            self.copy_picture_btn.setIcon(QIcon("image/icon/success.png"))
             print("复制成功")
         except Exception as e:
-            self.copy_btn.setIcon(QIcon("image/icon/fail.png"))
+            self.copy_picture_btn.setIcon(QIcon("image/icon/fail.png"))
             print("复制错误", f"失败：{str(e)}")
-        QTimer.singleShot(1000, lambda: self.copy_btn.setIcon(QIcon()))
+        QTimer.singleShot(1000, lambda: self.copy_picture_btn.setIcon(orign_icon))
 
     def paintEvent(self, event):
         """绘制图片背景（替代原纯色矩形），保留抗锯齿和半透明特性"""
@@ -826,9 +841,3 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制原粉色半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
-
-
-app = QApplication(sys.argv)
-w = EditWindow()
-w.show()
-sys.exit(app.exec())
