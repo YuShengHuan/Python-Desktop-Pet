@@ -108,6 +108,9 @@ class PenStyleDialog(QDialog):
                 border-color: #66bfff;
                 outline: none;
             }
+            QComboBox{
+               color:black;
+            }
             """
         )
         self.setFixedWidth(350)

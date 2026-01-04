@@ -46,7 +46,7 @@ class EditWindow(QWidget):
         self.resize_state["end_pos"] = self.geometry().bottomRight()
         # 仅处理左键按下
         self.resize_direction = self.get_resize_direction(event.globalPosition().toPoint())
-        if event.button() == Qt.MouseButton.LeftButton and not self.resize_direction:
+        if event.button() == Qt.MouseButton.LeftButton and not self.resize_direction and not self.isFullScreen():
             self.drag_state["is_drag"] = True
             # 关键修改：记录鼠标相对于窗口左上角的偏移量（而非全局位置）
             self.drag_state["drag_offset"] = event.globalPosition().toPoint() - self.pos()
@@ -104,7 +104,7 @@ class EditWindow(QWidget):
                 Qt.TransformationMode.SmoothTransformation  # 平滑缩放，抗锯齿
             )
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
-
+        self.resize(self.width(), 500)
         self.setObjectName("editWindow")
 
         self.setStyleSheet('''
@@ -219,17 +219,17 @@ class EditWindow(QWidget):
                     }
                     /* 输入框样式 */
                     QLineEdit {
-                        border: 2px solid #d0e1f9;
-                        border-radius: 6px;
+                        border: 1px solid white;
+                        border-radius: none;
                         padding: 4px 8px;
                         font-family: "Microsoft YaHei";
                         font-size: 14px;
-                        background-color: white;
-                        color:black;
+                        background-color: transparent;
+                        color:white;
                         selection-background-color: #66bfff;
                     }
                     QLineEdit:focus {
-                        border-color: #66bfff;
+                        border-color: none;
                         outline: none;
                     }
                 ''')
@@ -246,6 +246,18 @@ class EditWindow(QWidget):
 
         # 拉伸因子：将保存按钮推到右侧
         self.top_window_bar.addStretch()
+
+        def min_max_window():
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
+
+        self.min_max_window_btn = QPushButton("口")
+        self.min_max_window_btn.setObjectName("min_window_btn")
+        self.min_max_window_btn.setFixedSize(30, 30)
+        self.min_max_window_btn.clicked.connect(min_max_window)
+        self.top_window_bar.addWidget(self.min_max_window_btn)
 
         self.min_window_btn = QPushButton("一")
         self.min_window_btn.setObjectName("min_window_btn")
@@ -265,6 +277,13 @@ class EditWindow(QWidget):
         self.load_picture_btn.setFixedSize(100, 30)
         self.load_picture_btn.clicked.connect(self.load_picture_to_view)
         self.top_operatebar.addWidget(self.load_picture_btn)
+
+        self.clear_picture_btn = QPushButton("清除图片")
+        self.clear_picture_btn.setObjectName("clear_picture_btn")
+        self.clear_picture_btn.setIcon(QIcon("image/icon/clear_picture_btn"))
+        self.clear_picture_btn.setFixedSize(100, 30)
+        self.clear_picture_btn.clicked.connect(self.clear_picture_to_view)
+        self.top_operatebar.addWidget(self.clear_picture_btn)
 
         self.status_show_label = QLabel()
         self.status_show_label.setObjectName("status_show_btn")
@@ -333,16 +352,21 @@ class EditWindow(QWidget):
         self.top_toolbar.addWidget(self.add_text_btn)
 
         def add_pixmap_to_scene():
-            file_img_path=self.select_image()
+            file_img_path = self.select_image()
             if not file_img_path:
                 return
-            self.pixmap_item = CustomGraphicsPixmapItem(QPixmap(file_img_path))
-            self.pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            self.pixmap_item.setFlags(
+            pixmap_item = CustomGraphicsPixmapItem(QPixmap(file_img_path))
+            # 设置文字初始位置（图片中心）
+            center_x = self.img_width / 2 - pixmap_item.boundingRect().width() / 2
+            center_y = self.img_height / 2 - pixmap_item.boundingRect().height() / 2
+            pixmap_item.setPos(center_x, center_y)
+            pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            pixmap_item.setFlags(
                 QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
             )
-            self.pixmap_item.setZValue(10)
-            self.scene.addItem(self.pixmap_item)
+            pixmap_item.setZValue(10)
+            self.scene.addItem(pixmap_item)
+
         self.add_pixmap_btn = QPushButton("添加图片")
         self.add_pixmap_btn.setFixedSize(80, 30)
         self.add_pixmap_btn.setObjectName("add_pixmap_btn")
@@ -427,20 +451,18 @@ class EditWindow(QWidget):
         self.view = None
         self.scene = None
         self.main_pixmap_item = None
-        self.screenshot_pixmap = QPixmap(500, 500)
+        self.screenshot_pixmap = None
         self.img_width = 0
         self.img_height = 0
         self.text_items = []  # 文字项列表
         self.text_char_format = QTextCharFormat()
         self.init_text_char_format()
 
-
         # 绘画
         self.draw_pen = QPen()  # 手绘画笔样式
         self.init_draw_pen()  # 初始化画笔
 
         self._init_graphics_view()
-
 
         self.start_pos = None
         self.end_pos = None
@@ -486,6 +508,7 @@ class EditWindow(QWidget):
     def set_custom_pen(self, pen: QPen):
         # 更新当前画笔
         self.draw_pen = pen
+
     def select_image(self):
         file_img_path, _ = QFileDialog.getOpenFileName(
             parent=self,
@@ -501,22 +524,28 @@ class EditWindow(QWidget):
 
     def load_picture_to_view(self):
         # 若用户取消选择，直接返回
-        file_img_path=self.select_image()
+        file_img_path = self.select_image()
         if not file_img_path:
             return
         self.load_screenshot_pixmap(
             QPixmap(file_img_path)
         )
 
+    def clear_picture_to_view(self):
+        self.load_screenshot_pixmap(
+            None
+        )
+
     def load_screenshot_pixmap(self, screenshot_pixmap):
         self.screenshot_pixmap = screenshot_pixmap  # 截图的Pixmap
-        self.img_width = screenshot_pixmap.width()
-        self.img_height = screenshot_pixmap.height()
+        if self.screenshot_pixmap:
+            self.img_width = screenshot_pixmap.width()
+            self.img_height = screenshot_pixmap.height()
+        else:
+            self.img_width = self.view.width()
+            self.img_height = self.view.height()
         # ========== 优化后的绘图区域 ==========
         self._init_graphics_view()
-
-        # 清空文字项列表（新截图需重新添加文字）
-        self.text_items.clear()
 
     def _init_graphics_view(self):
         """初始化QGraphicsView（首次创建+后续更新内容）"""
@@ -532,7 +561,7 @@ class EditWindow(QWidget):
             self.view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
             self.scene.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
             # 3. 样式与边框配置
-            self.view.setStyleSheet("background: transparent;")
+            self.view.setStyleSheet("background: transparent;border:none;")
             # 4. 隐藏滚动条
             self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -601,21 +630,33 @@ class EditWindow(QWidget):
         # ========== 每次更新截图：重置场景和图片（复用控件） ==========
         # 1. 清空场景中旧的图形项（图片+文字），避免残留
         self.scene.clear()
+        # 清空文字项列表（新截图需重新添加文字）
+        self.text_items.clear()
 
         # 3. 创建新的图片项并添加到场景
-        self.main_pixmap_item = QGraphicsPixmapItem(self.screenshot_pixmap)
-        self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-        self.main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
-        self.scene.addItem(self.main_pixmap_item)
+        if self.screenshot_pixmap:
+            self.img_width = self.screenshot_pixmap.width()
+            self.img_height = self.screenshot_pixmap.height()
 
-        self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
+            self.pixmap_item = QGraphicsPixmapItem(self.screenshot_pixmap)
+            self.pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            self.pixmap_item.setPos(0, 0)  # 强制图片在场景原点
+            self.scene.addItem(self.pixmap_item)
 
-        # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
-        self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
-        # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
-        self.view.resetTransform()
-        # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-        self.view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
+            self.scene.setSceneRect(self.pixmap_item.boundingRect())
+            # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
+            self.view.resetTransform()
+            # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
+            self.view.fitInView(self.pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        else:
+            self.img_width = self.view.width()
+            self.img_height = self.view.height()
+            self.scene.setSceneRect(QRect(0, 0, self.img_width, self.img_height))
+            # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
+            self.view.resetTransform()
+            # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
+            self.view.fitInView(self.view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def _on_wheel_scroll(self, event):
         """滚轮缩放视图"""
@@ -623,8 +664,8 @@ class EditWindow(QWidget):
         scale_factor = 1.1 if event.angleDelta().y() > 0 else 0.9
         # 获取当前视图的变换矩阵
         current_scale = self.view.transform().m11()
-        # 限制缩放范围（0.1倍 ~ 3倍）
-        if 0.1 < current_scale * scale_factor < 3:
+        # 限制缩放范围（0.1倍 ~ 100倍）
+        if 0.1 < current_scale * scale_factor < 100:
             self.view.scale(scale_factor, scale_factor)
 
     def update_selected_text_style(self, text_char_format: QTextCharFormat):
@@ -640,10 +681,12 @@ class EditWindow(QWidget):
                 item.apply_style_to_selected(
                     self.text_char_format
                 )
+
     def init_text_char_format(self):
         self.text_char_format.setForeground(QColor(Qt.GlobalColor.red))
-        self.text_char_format.setFontPointSize(15)
+        self.text_char_format.setFontPointSize(20)
         self.text_char_format.setBackground(QColor(Qt.GlobalColor.transparent))
+
     def init_draw_pen(self):
         self.draw_pen.setColor(QColor(255, 0, 0))  # 红色画笔
         self.draw_pen.setWidth(5)  # 画笔宽度
@@ -660,8 +703,8 @@ class EditWindow(QWidget):
             text_item.apply_style_to_selected(self.text_char_format)  # 新文字默认应用全部样式
 
             # 设置文字初始位置（图片中心）
-            center_x = self.screenshot_pixmap.width() / 2 - text_item.boundingRect().width() / 2
-            center_y = self.screenshot_pixmap.height() / 2 - text_item.boundingRect().height() / 2
+            center_x = self.img_width / 2 - text_item.boundingRect().width() / 2
+            center_y = self.img_height / 2 - text_item.boundingRect().height() / 2
             text_item.setPos(center_x, center_y)
             # 允许文字拖拽移动、选中、聚焦
             text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable)
@@ -781,5 +824,11 @@ class EditWindow(QWidget):
             painter.drawPixmap(self.rect(), self.bg_pixmap)
         else:
             # 图片加载失败时，降级绘制原粉色半透明矩形
-            painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
+            painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+
+
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())
