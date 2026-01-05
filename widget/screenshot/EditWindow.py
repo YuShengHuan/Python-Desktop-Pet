@@ -457,7 +457,6 @@ class EditWindow(QWidget):
         self.screenshot_pixmap = None
         self.img_width = 0
         self.img_height = 0
-        self.text_items = []  # 文字项列表
         self.text_char_format = QTextCharFormat()
         self.init_text_char_format()
 
@@ -465,18 +464,18 @@ class EditWindow(QWidget):
         self.draw_pen = QPen()  # 手绘画笔样式
         self.init_draw_pen()  # 初始化画笔
 
-        self._init_graphics_view()
-
         self.start_pos = None
         self.end_pos = None
         self.current_mode = None
         self.current_draw_item = None  # 当前绘制的图形项
         self.current_draw_path = None  # 当前手绘路径
-        self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
-        self.scene.addItem(self.graphics_group)
+
+        self._init_graphics_view()
+
         self.timer_check_status = QTimer()
         self.timer_check_status.timeout.connect(self.checked_status)
         self.timer_check_status.start(200)
+
 
     def checked_status(self):
         text = ""
@@ -555,6 +554,8 @@ class EditWindow(QWidget):
             # 1. 创建场景（初始大小可设为0，后续更新）
             self.scene = QGraphicsScene()
             self.scene.setBackgroundBrush(QBrush(QColor(0, 0, 0, 0)))
+            self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
+            self.scene.addItem(self.graphics_group)
             # 2. 创建视图并配置基础属性（仅执行一次）
             self.view = QGraphicsView(self.scene)
             self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -592,6 +593,7 @@ class EditWindow(QWidget):
                     self.current_draw_item.setFlags(
                         QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
                     )
+                    self.current_draw_item.setZValue(10)
                     self.scene.addItem(self.current_draw_item)
                     return
                 QGraphicsView.mousePressEvent(self_, event)
@@ -631,8 +633,6 @@ class EditWindow(QWidget):
         # ========== 每次更新截图：重置场景和图片（复用控件） ==========
         # 1. 清空场景中旧的图形项（图片+文字），避免残留
         self.scene.clear()
-        # 清空文字项列表（新截图需重新添加文字）
-        self.text_items.clear()
 
         # 3. 创建新的图片项并添加到场景
         if self.screenshot_pixmap:
@@ -659,6 +659,7 @@ class EditWindow(QWidget):
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
             self.view.fitInView(self.view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
 
+
     def _on_wheel_scroll(self, event):
         """滚轮缩放视图"""
         # 计算缩放因子（每次缩放10%）
@@ -677,7 +678,7 @@ class EditWindow(QWidget):
             return
 
         for item in selected_items:
-            if isinstance(item, CustomGraphicsTextItem) and item in self.text_items:
+            if isinstance(item, CustomGraphicsTextItem):
                 # 应用样式
                 item.apply_style_to_selected(
                     self.text_char_format
@@ -708,6 +709,7 @@ class EditWindow(QWidget):
             center_x = self.img_width / 2 - text_item.boundingRect().width() / 2
             center_y = self.img_height / 2 - text_item.boundingRect().height() / 2
             text_item.setPos(center_x, center_y)
+            text_item.setZValue(10)
             # 允许文字拖拽移动、选中、聚焦
             text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable)
             text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable)
@@ -715,7 +717,6 @@ class EditWindow(QWidget):
 
             # 添加到场景和列表
             self.scene.addItem(text_item)
-            self.text_items.append(text_item)
             self.text_edit.clear()
             self.add_text_btn.setIcon(QIcon("image/icon/success.png"))
         else:
@@ -739,8 +740,6 @@ class EditWindow(QWidget):
             QMessageBox.warning(self, "提示", "请先选中内容！")
             return
         for item in selected_items:
-            if isinstance(item, CustomGraphicsTextItem) and item in self.text_items:
-                self.text_items.remove(item)
             self.scene.removeItem(item)
             del item
 
@@ -749,6 +748,19 @@ class EditWindow(QWidget):
         selected_items = self.scene.selectedItems()
         for item in selected_items:
             self.graphics_group.addToGroup(item)
+    def scene_to_image(self,scene:QGraphicsScene,format=QImage.Format.Format_RGBA8888):
+        image = QImage(scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
+
+        image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
+        # 将场景渲染到图片
+        painter = QPainter(image)
+        # 【关键3】启用全量高清渲染提示（不仅是抗锯齿）
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
+        scene.render(painter)
+        painter.end()
+        return image
 
     def save_image(self):
         """保存编辑后的图片（优化：添加保存成功提示）"""
@@ -764,18 +776,7 @@ class EditWindow(QWidget):
         orign_icon = self.save_picture_btn.icon()
         try:
             # 创建与场景大小一致的图片
-            image = QImage(self.scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
-
-            image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
-            # 将场景渲染到图片
-            painter = QPainter(image)
-            # 【关键3】启用全量高清渲染提示（不仅是抗锯齿）
-            painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-            painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
-            self.scene.render(painter)
-            painter.end()
-
+            image=self.scene_to_image(self.scene)
             # 保存图片
             if filter_type == "JPG图片 (*.jpg)":
                 # JPG不支持透明，转换为RGB格式
@@ -792,19 +793,7 @@ class EditWindow(QWidget):
     def copy_image(self):
         orign_icon=self.copy_picture_btn.icon()
         try:
-            # 创建与场景大小一致的图片
-            image = QImage(self.scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
-
-            image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
-            # 将场景渲染到图片
-            painter = QPainter(image)
-            # 【关键3】启用全量高清渲染提示（不仅是抗锯齿）
-            painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-            painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
-            self.scene.render(painter)
-            painter.end()
-
+            image = self.scene_to_image(self.scene)
             clipboard = QApplication.clipboard()  # 获取系统剪贴板
             pixmap = QPixmap.fromImage(image)  # QImage转QPixmap
             clipboard.setPixmap(pixmap)  # 写入剪贴板
@@ -815,6 +804,7 @@ class EditWindow(QWidget):
             self.copy_picture_btn.setIcon(QIcon("image/icon/fail.png"))
             print("复制错误", f"失败：{str(e)}")
         QTimer.singleShot(1000, lambda: self.copy_picture_btn.setIcon(orign_icon))
+
 
     def paintEvent(self, event):
         """绘制图片背景（替代原纯色矩形），保留抗锯齿和半透明特性"""

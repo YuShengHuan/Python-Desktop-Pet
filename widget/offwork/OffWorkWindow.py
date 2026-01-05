@@ -170,7 +170,7 @@ class OffWorkWindow(QWidget):
     def timer_change_time_text(self):
         self.target_time_array = [
             (time(9, 0, 0), time(12, 0, 0)),
-            (time(14, 0, 0), time(18, 0, 0))
+            (time(13, 30, 0), time(17, 30, 0))
         ]
         for r_time in self.target_time_array:
             if self.is_in_time_range(r_time):
