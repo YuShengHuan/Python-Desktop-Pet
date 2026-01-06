@@ -1,16 +1,10 @@
-import copy
 import os.path
 import sys
 
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-
-from widget.screenshot.custom.CustomGraphicsPixmapItem import CustomGraphicsPixmapItem
-from widget.screenshot.custom.CustomGraphicsTextItem import CustomGraphicsTextItem
-# 注意：请确保这两个自定义对话框的路径正确
-from widget.screenshot.dialog.PenStyleDialog import PenStyleDialog
-from widget.screenshot.dialog.TextCharFormatDialog import TextCharFormatDialog
+from widget.screenshot.custom.CustomGraphicsView import CustomGraphicsView
 
 
 class EditWindow(QWidget):
@@ -94,7 +88,7 @@ class EditWindow(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.resize_direction = None
-        self.add_file_dir = "."
+        self.add_file_dir = ".."
         self.bg_pixmap = QPixmap()
         # 替换为你的图片路径（绝对路径/相对路径均可，支持png/jpg等格式）
         img_path = "image/bg/screenshot_edit.png"  # 示例：同目录下的background.png
@@ -270,16 +264,16 @@ class EditWindow(QWidget):
 
         self.main_layout.addLayout(self.top_window_bar)
 
-        self.top_operatebar = QHBoxLayout()
-        self.top_operatebar.setSpacing(10)
-        self.top_operatebar.setContentsMargins(5, 0, 5, 3)
-        self.top_operatebar.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.top_operate_bar = QHBoxLayout()
+        self.top_operate_bar.setSpacing(10)
+        self.top_operate_bar.setContentsMargins(5, 0, 5, 3)
+        self.top_operate_bar.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self.load_picture_btn = QPushButton("加载图片")
         self.load_picture_btn.setObjectName("load_picture_btn")
         self.load_picture_btn.setFixedSize(70, 30)
         self.load_picture_btn.clicked.connect(self.load_picture_to_view)
-        self.top_operatebar.addWidget(self.load_picture_btn)
+        self.top_operate_bar.addWidget(self.load_picture_btn)
 
         self.select_scene_main_pixmap_fill_color_btn = QPushButton("")
         self.select_scene_main_pixmap_fill_color_btn.setFixedSize(50, 30)
@@ -287,30 +281,14 @@ class EditWindow(QWidget):
         self.select_scene_main_pixmap_fill_color_btn.clicked.connect(self.select_scene_main_pixmap_fill_color)
         self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
             f"background-color: {Qt.GlobalColor.white.name}; border: 1px solid #ccc;")
-        self.top_operatebar.addWidget(self.select_scene_main_pixmap_fill_color_btn)
+        self.top_operate_bar.addWidget(self.select_scene_main_pixmap_fill_color_btn)
 
         self.clear_scene_btn = QPushButton("清除")
         self.clear_scene_btn.setObjectName("clear_scene_btn")
         self.clear_scene_btn.setIcon(QIcon("image/icon/clear_scene_btn"))
         self.clear_scene_btn.setFixedSize(50, 30)
         self.clear_scene_btn.clicked.connect(self.clear_picture_to_view)
-        self.top_operatebar.addWidget(self.clear_scene_btn)
-
-        self.status_show_label = QLabel()
-        self.status_show_label.setObjectName("status_show_btn")
-        self.status_show_label.setStyleSheet("""
-            #status_show_btn {
-                /* 字体配置：与现有控件一致（微软雅黑、14号字） */
-                font-family: "Microsoft YaHei";
-                font-size: 14px;
-                /* 文字颜色：白色（适配对话框渐变背景） */
-                color: black;
-                /* 背景配置：浅蓝半透明背景，与主界面风格呼应 */
-                background-color: transparent;
-                border-radius: 0;
-            }
-        """)
-        self.top_operatebar.addWidget(self.status_show_label)
+        self.top_operate_bar.addWidget(self.clear_scene_btn)
 
         self.scene_history_operatebar = QHBoxLayout()
         self.scene_history_operatebar.setSpacing(0)
@@ -338,7 +316,7 @@ class EditWindow(QWidget):
         self.backward_scene_history_btn.clicked.connect(self.backward_scene_history)
         self.scene_history_operatebar.addWidget(self.backward_scene_history_btn)
 
-        self.top_operatebar.addLayout(
+        self.top_operate_bar.addLayout(
             self.scene_history_operatebar
         )
 
@@ -346,54 +324,32 @@ class EditWindow(QWidget):
         self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
         self.text_style_btn.setFixedSize(100, 30)
         self.text_style_btn.setObjectName("pen_style_btn")
-        self.text_style_btn.clicked.connect(self.open_text_char_format_dialog)
-        self.top_operatebar.addWidget(self.text_style_btn)
+
+        self.top_operate_bar.addWidget(self.text_style_btn)
 
         self.pen_style_btn = QPushButton("画笔样式")
         self.pen_style_btn.setFixedSize(100, 30)
         self.pen_style_btn.setObjectName("pen_style_btn")
         self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
-        self.pen_style_btn.clicked.connect(self.open_pen_style_dialog)
-        self.top_operatebar.addWidget(self.pen_style_btn)
+        self.top_operate_bar.addWidget(self.pen_style_btn)
 
         self.save_picture_btn = QPushButton("保存图片")
         self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
         self.save_picture_btn.setFixedSize(100, 30)
         self.save_picture_btn.clicked.connect(self.save_image)
         self.save_picture_btn.setObjectName("save_btn")
-        self.top_operatebar.addWidget(self.save_picture_btn)
+        self.top_operate_bar.addWidget(self.save_picture_btn)
 
         self.copy_picture_btn = QPushButton("复制图片")
         self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
         self.copy_picture_btn.setFixedSize(100, 30)
         self.copy_picture_btn.setObjectName("copy_btn")
         self.copy_picture_btn.clicked.connect(self.copy_image)
-        self.top_operatebar.addWidget(self.copy_picture_btn)
+        self.top_operate_bar.addWidget(self.copy_picture_btn)
 
-        def status_show_btn_paintEvent(self_, event):
-            painter = QPainter(self_)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 抗锯齿，让文字更平滑
-            painter.setFont(QFont("微软雅黑", 9, QFont.Weight.Bold))
-            painter.setPen(Qt.PenStyle.NoPen)  # 隐藏边框
-
-            # 1. 创建线性渐变（水平渐变：从左到右）
-            # 渐变范围：覆盖整个控件的文字区域
-            gradient = QLinearGradient(0, 0, self_.width(), 0)  # 起点(0,0) → 终点(控件宽度,0)（水平）
-            # 渐变范围：垂直渐变（从上到下）→ QLinearGradient(0, 0, 0, self.height())
-            gradient.setColorAt(0, Qt.GlobalColor.red)  # 渐变起始颜色（左/上）
-            gradient.setColorAt(0.5, Qt.GlobalColor.yellow)  # 渐变中间颜色
-            gradient.setColorAt(1, Qt.GlobalColor.white)  # 渐变结束颜色（右/下）
-            # 2. 将渐变设置为画笔
-            brush = QBrush(gradient)
-            pen = QPen(brush, 0)  # 笔宽0，仅用画刷颜色
-            painter.setPen(pen)
-            # 3. 绘制文字（居中）
-            painter.drawText(self_.rect(), Qt.AlignmentFlag.AlignCenter, self_.text())
-
-        self.status_show_label.paintEvent = lambda event: status_show_btn_paintEvent(self.status_show_label, event)
 
         self.main_layout.addLayout(
-            self.top_operatebar
+            self.top_operate_bar
         )
 
         # ========== 工具栏容器（拆分为上下两栏） ==========
@@ -421,27 +377,11 @@ class EditWindow(QWidget):
         self.add_text_btn.clicked.connect(self.add_text_to_scene)
         self.top_toolbar.addWidget(self.add_text_btn)
 
-        def add_pixmap_to_scene():
-            file_img_path = self.select_image()
-            if not file_img_path:
-                return
-            pixmap_item = CustomGraphicsPixmapItem(QPixmap(file_img_path))
-            # 设置文字初始位置（图片中心）
-            center_x = self.img_width / 2 - pixmap_item.boundingRect().width() / 2
-            center_y = self.img_height / 2 - pixmap_item.boundingRect().height() / 2
-            pixmap_item.setPos(center_x, center_y)
-            pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            pixmap_item.setFlags(
-                QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-            )
-            pixmap_item.setZValue(10)
-            self.scene.addItem(pixmap_item)
-
         self.add_picture_btn = QPushButton("添加图片")
         self.add_picture_btn.setFixedSize(90, 30)
         self.add_picture_btn.setObjectName("add_pixmap_btn")
         self.add_picture_btn.setIcon(QIcon("image/icon/add_picture_btn.png"))
-        self.add_picture_btn.clicked.connect(add_pixmap_to_scene)
+        self.add_picture_btn.clicked.connect(self.add_pixmap_to_scene)
         self.top_toolbar.addWidget(self.add_picture_btn)
 
         self.del_text_btn = QPushButton("删除选中")
@@ -461,25 +401,21 @@ class EditWindow(QWidget):
         self.pen_btn = QPushButton("画笔")
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
         self.pen_btn.setFixedSize(65, 30)
-        self.pen_btn.clicked.connect(lambda: self.switch_mode("draw"))
         self.top_toolbar.addWidget(self.pen_btn)
 
         self.rect_btn = QPushButton("矩形")
         self.rect_btn.setIcon(QIcon("image/icon/rect_btn.png"))
         self.rect_btn.setFixedSize(65, 30)
-        self.rect_btn.clicked.connect(lambda: self.switch_mode("rect"))
         self.top_toolbar.addWidget(self.rect_btn)
 
         self.circle_btn = QPushButton("圆形")
         self.circle_btn.setIcon(QIcon("image/icon/circle_btn.png"))
         self.circle_btn.setFixedSize(65, 30)
-        self.circle_btn.clicked.connect(lambda: self.switch_mode("ellipse"))
         self.top_toolbar.addWidget(self.circle_btn)
 
         self.line_btn = QPushButton("直线")
         self.line_btn.setIcon(QIcon("image/icon/line_btn.png"))
         self.line_btn.setFixedSize(65, 30)
-        self.line_btn.clicked.connect(lambda: self.switch_mode("line"))
         self.top_toolbar.addWidget(self.line_btn)
 
         self.tool_container_layout.addLayout(self.top_toolbar)
@@ -490,79 +426,9 @@ class EditWindow(QWidget):
         self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
         self.scene.addItem(self.graphics_group)
         # 2. 创建视图并配置基础属性（仅执行一次）
-        self.view = QGraphicsView(self.scene)
-        self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self.view.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        self.view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        self.scene.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
-        # 3. 样式与边框配置
-        self.view.setStyleSheet("background: transparent;border:none;")
-        # 4. 隐藏滚动条
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # 5. 交互模式
-        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        # 6. 滚轮缩放（绑定事件）
-        self.view.wheelEvent = self._on_wheel_scroll
-        self.view.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # ============ 以下是纯新增：鼠标事件绑定（手绘/形状/橡皮擦） ============
-        def view_mousePressEvent(self_, event: QMouseEvent):
-            self.start_pos = self.view.mapToScene(event.position().toPoint())
-            if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
-                # 手绘模式
-                if self.current_mode == "draw":
-                    self.current_draw_path = QPainterPath()
-                    self.current_draw_path.moveTo(self.start_pos)
-                    self.current_draw_item = QGraphicsPathItem(self.current_draw_path)
-                # 形状绘制
-                elif self.current_mode == "rect":
-                    self.current_draw_item = QGraphicsRectItem(QRectF(self.start_pos, self.start_pos))
-                elif self.current_mode == "ellipse":
-                    self.current_draw_item = QGraphicsEllipseItem(QRectF(self.start_pos, self.start_pos))
-                elif self.current_mode == "line":
-                    self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
-                self.current_draw_item.setPen(self.draw_pen)
-                self.current_draw_item.setFlags(
-                    QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-                )
-                self.current_draw_item.setZValue(10)
-                self.scene.addItem(self.current_draw_item)
-                return
-            QGraphicsView.mousePressEvent(self_, event)
-
-        def view_mouseMoveEvent(self_, event: QMouseEvent):
-            self.end_pos = self.view.mapToScene(event.position().toPoint())
-            if event.buttons() & Qt.MouseButton.LeftButton and self.current_mode:
-                # 手绘
-                if self.current_mode == "draw":
-                    self.current_draw_path.lineTo(self.end_pos)
-                    self.current_draw_item.setPath(self.current_draw_path)
-                elif self.current_mode in ["rect", "ellipse"]:
-                    self.current_draw_item.setRect(QRectF(self.start_pos, self.end_pos).normalized())
-                elif self.current_mode == "line":
-                    self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
-                return
-            QGraphicsView.mouseMoveEvent(self_, event)
-
-        def view_mouseReleaseEvent(self_, event: QMouseEvent):
-            if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
-                self.current_draw_item = None
-                self.current_draw_path = None
-            QGraphicsView.mouseReleaseEvent(self_, event)
-
-        def view_mouseDoubleClickEvent(self_, event: QMouseEvent):
-            self.current_mode = None
-            QGraphicsView.mouseDoubleClickEvent(self_, event)
-
-        # 绑定事件到视图
-        self.view.mousePressEvent = lambda e: view_mousePressEvent(self.view, e)
-        self.view.mouseMoveEvent = lambda e: view_mouseMoveEvent(self.view, e)
-        self.view.mouseReleaseEvent = lambda e: view_mouseReleaseEvent(self.view, e)
-        self.view.mouseDoubleClickEvent = lambda e: view_mouseDoubleClickEvent(self.view, e)
-
+        self.custom_view = CustomGraphicsView(self.scene)
         # 7. 仅首次将视图添加到布局，避免重复添加
-        self.main_layout.addWidget(self.view, stretch=1)
+        self.main_layout.addWidget(self.custom_view, stretch=1)
 
         # 场景
         self.main_pixmap_item = None
@@ -571,22 +437,17 @@ class EditWindow(QWidget):
         self.scene_history_index = -1
         self.img_width = 0
         self.img_height = 0
-        # 文字
-        self.text_char_format = QTextCharFormat()
-        self.init_text_char_format()
 
-        # 绘画
-        self.draw_pen = QPen()  # 手绘画笔样式
-        self.init_draw_pen()  # 初始化画笔
+        self.pen_btn.clicked.connect(lambda: self.custom_view.switch_mode("draw"))
+        self.rect_btn.clicked.connect(lambda: self.custom_view.switch_mode("rect"))
+        self.circle_btn.clicked.connect(lambda: self.custom_view.switch_mode("ellipse"))
+        self.line_btn.clicked.connect(lambda: self.custom_view.switch_mode("line"))
 
-        self.start_pos = None
-        self.end_pos = None
-        self.current_mode = None
-        self.current_draw_item = None  # 当前绘制的图形项
-        self.current_draw_path = None  # 当前手绘路径
+        self.pen_style_btn.clicked.connect(self.custom_view.open_pen_style_dialog)
+        self.text_style_btn.clicked.connect(self.custom_view.open_text_char_format_dialog)
 
         def init_graphics():
-            main_pixmap = QPixmap(self.view.width(), self.view.height())
+            main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
             main_pixmap.fill(Qt.GlobalColor.white)
             self.load_graphics_view_scene(
                 main_pixmap
@@ -599,16 +460,6 @@ class EditWindow(QWidget):
         self.timer_check_status.start(200)
 
     def checked_status(self):
-        text = ""
-        if len(self.scene.selectedItems()) > 0:
-            text += "图形 "
-        if self.current_mode:
-            for k, v in self.model_type.items():
-                if v == self.current_mode:
-                    text += f" {k} "
-                    break
-        self.status_show_label.setText(text)
-
         if self.scene_history_index == 0:
             self.forward_scene_history_btn.setDisabled(True)
         else:
@@ -639,7 +490,7 @@ class EditWindow(QWidget):
         if color.isValid():
             self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
                 f"background-color: {color.name()}; border: 1px solid #ccc;")
-            main_pixmap = QPixmap(self.view.width(), self.view.height())
+            main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
             main_pixmap.fill(color)
             self.load_graphics_view_scene(
                 main_pixmap
@@ -661,26 +512,6 @@ class EditWindow(QWidget):
         self.clear_scene_load_history_main_pixmap(
             new_scene_pixmap
         )
-
-    def open_text_char_format_dialog(self):
-        dialog = TextCharFormatDialog(self.text_char_format, self)
-        dialog.text_char_format_confirmed.connect(self.update_selected_text_style)
-        dialog.text_char_format_changed.connect(self.update_selected_text_style)
-        dialog.move(QCursor.pos())
-        dialog.exec()
-
-    def open_pen_style_dialog(self):
-        # 创建自定义画笔对话框，传入当前画笔
-        dialog = PenStyleDialog(self.draw_pen, self)
-        # 绑定确认信号
-        dialog.pen_confirmed.connect(self.update_custom_pen)
-        # 显示对话框
-        dialog.move(QCursor.pos())
-        dialog.exec()
-
-    def update_custom_pen(self, pen: QPen):
-        # 更新当前画笔
-        self.draw_pen = pen
 
     def select_image(self):
         file_img_path, _ = QFileDialog.getOpenFileName(
@@ -727,93 +558,37 @@ class EditWindow(QWidget):
             # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
             self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
             # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
-            self.view.resetTransform()
+            self.custom_view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-            self.view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            self.custom_view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
         else:
-            self.img_width = self.view.width()
-            self.img_height = self.view.height()
+            self.img_width = self.custom_view.width()
+            self.img_height = self.custom_view.height()
             self.scene.setSceneRect(QRect(0, 0, self.img_width, self.img_height))
             # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
-            self.view.resetTransform()
+            self.custom_view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-            self.view.fitInView(self.view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
+            self.custom_view.fitInView(self.custom_view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
         self.save_scene_history()
-
-    def _on_wheel_scroll(self, event):
-        """滚轮缩放视图"""
-        # 计算缩放因子（每次缩放10%）
-        scale_factor = 1.1 if event.angleDelta().y() > 0 else 0.9
-        # 获取当前视图的变换矩阵
-        current_scale = self.view.transform().m11()
-        # 限制缩放范围（0.1倍 ~ 100倍）
-        if 0.1 < current_scale * scale_factor < 100:
-            self.view.scale(scale_factor, scale_factor)
-
-    def update_selected_text_style(self, text_char_format: QTextCharFormat):
-        self.text_char_format = text_char_format
-        """将text_style同步到选中的文字项"""
-        selected_items = self.scene.selectedItems()
-        if not selected_items:
-            return
-
-        for item in selected_items:
-            if isinstance(item, CustomGraphicsTextItem):
-                # 应用样式
-                item.apply_style_to_selected(
-                    self.text_char_format
-                )
-
-    def init_text_char_format(self):
-        self.text_char_format.setForeground(QColor(Qt.GlobalColor.red))
-        self.text_char_format.setFontPointSize(20)
-        self.text_char_format.setBackground(QColor(Qt.GlobalColor.transparent))
-
-    def init_draw_pen(self):
-        self.draw_pen.setColor(QColor(255, 0, 0))  # 红色画笔
-        self.draw_pen.setWidth(5)  # 画笔宽度
-        self.draw_pen.setCapStyle(Qt.PenCapStyle.RoundCap)  # 线条端点圆角
-        self.draw_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)  # 线条拐角圆角
 
     def add_text_to_scene(self):
         """添加文字到图片（优化：支持即时应用当前属性）"""
         text = self.text_edit.text().strip()
         orign_icon = self.add_text_btn.icon()
         if len(text) > 0:
-            # 创建文字项
-            text_item = CustomGraphicsTextItem(text)
-            # 设置文字属性
-            text_item.apply_style_to_selected(self.text_char_format)  # 新文字默认应用全部样式
-
-            # 设置文字初始位置（图片中心）
-            center_x = self.img_width / 2 - text_item.boundingRect().width() / 2
-            center_y = self.img_height / 2 - text_item.boundingRect().height() / 2
-            text_item.setPos(center_x, center_y)
-            text_item.setZValue(10)
-            # 允许文字拖拽移动、选中、聚焦
-            text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable)
-            text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable)
-            text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsFocusable)
-
-            # 添加到场景和列表
-            self.scene.addItem(text_item)
+            self.custom_view.add_text_to_scene(text)
             self.text_edit.clear()
             self.add_text_btn.setIcon(QIcon("image/icon/success.png"))
         else:
             self.add_text_btn.setIcon(QIcon("image/icon/fail.png"))
         QTimer.singleShot(1000, lambda: self.add_text_btn.setIcon(orign_icon))
 
-    def switch_mode(self, mode):
-        if self.current_mode == mode:
-            self.current_mode = None
+    def add_pixmap_to_scene(self):
+        file_img_path = self.select_image()
+        if not file_img_path:
             return
-        self.current_mode = mode
-        if mode == "draw":
-            self.view.setCursor(Qt.CursorShape.CrossCursor)
-        else:
-            self.view.setCursor(Qt.CursorShape.ArrowCursor)
+        self.custom_view.add_pixmap_to_scene(file_img_path)
 
-    # ============ 纯新增：兼容删除所有图形项（原有只删文字，现在增强） ============
     def delete_selected_item(self):
         selected_items = self.scene.selectedItems()
         if not selected_items:
@@ -823,19 +598,12 @@ class EditWindow(QWidget):
             self.scene.removeItem(item)
             del item
 
-    # ============ 纯新增：批量添加选中项到组 QGraphicsItemGroup ============
-    def add_to_group(self):
-        selected_items = self.scene.selectedItems()
-        for item in selected_items:
-            self.graphics_group.addToGroup(item)
-
     def scene_to_image(self, scene: QGraphicsScene, format=QImage.Format.Format_RGBA8888):
         image = QImage(scene.sceneRect().size().toSize(), format)
-
         image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
         # 将场景渲染到图片
         painter = QPainter(image)
-        # 【关键3】启用全量高清渲染提示（不仅是抗锯齿）
+        # 启用全量高清渲染提示（不仅是抗锯齿）
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
@@ -899,3 +667,9 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+
+
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())

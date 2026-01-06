@@ -1,13 +1,10 @@
-import io
-
 import cv2
 import numpy as np
-from PIL import Image
-from PySide6.QtCore import QBuffer, QIODevice, QRect, QObject
+from PySide6.QtCore import QRect, QObject
 from PySide6.QtWidgets import QApplication
 
-from widget.screenshot.EditWindow import EditWindow
-from widget.screenshot.PaddleOCRManagement import PaddleOCRManagement
+from widget.screenshot.edit.EditWindow import EditWindow
+from widget.screenshot.ocr.PaddleOCRManagement import PaddleOCRManagement
 from widget.screenshot.ScreenshotWindow import ScreenshotWindow
 from PySide6.QtGui import *
 
