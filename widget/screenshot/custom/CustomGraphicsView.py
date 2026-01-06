@@ -9,6 +9,8 @@ from widget.screenshot.dialog.TextCharFormatDialog import TextCharFormatDialog
 
 
 class CustomGraphicsView(QGraphicsView):
+    model_changed = Signal(str, str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
@@ -74,13 +76,12 @@ class CustomGraphicsView(QGraphicsView):
 
     def switch_mode(self, mode):
         if self.current_mode == mode:
+            self.model_changed.emit(self.current_mode, None)
             self.current_mode = None
             return
+
+        self.model_changed.emit(self.current_mode, mode)
         self.current_mode = mode
-        if mode == "draw":
-            self.setCursor(Qt.CursorShape.CrossCursor)
-        else:
-            self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def add_text_to_scene(self, text):
         """添加文字到图片（优化：支持即时应用当前属性）"""
@@ -138,7 +139,7 @@ class CustomGraphicsView(QGraphicsView):
         self.start_pos = self.mapToScene(event.position().toPoint())
         if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
             # 手绘模式
-            if self.current_mode == "draw":
+            if self.current_mode == "pen":
                 self.current_draw_path = QPainterPath()
                 self.current_draw_path.moveTo(self.start_pos)
                 self.current_draw_item = QGraphicsPathItem(self.current_draw_path)
@@ -162,7 +163,7 @@ class CustomGraphicsView(QGraphicsView):
         self.end_pos = self.mapToScene(event.position().toPoint())
         if event.buttons() & Qt.MouseButton.LeftButton and self.current_mode:
             # 手绘
-            if self.current_mode == "draw":
+            if self.current_mode == "pen":
                 self.current_draw_path.lineTo(self.end_pos)
                 self.current_draw_item.setPath(self.current_draw_path)
             elif self.current_mode in ["rect", "ellipse"]:
@@ -179,5 +180,6 @@ class CustomGraphicsView(QGraphicsView):
         QGraphicsView.mouseReleaseEvent(self, event)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
+        self.model_changed.emit(self.current_mode, None)
         self.current_mode = None
         super().mouseDoubleClickEvent(event)

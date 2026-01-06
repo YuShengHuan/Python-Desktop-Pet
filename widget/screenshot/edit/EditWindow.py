@@ -347,7 +347,6 @@ class EditWindow(QWidget):
         self.copy_picture_btn.clicked.connect(self.copy_image)
         self.top_operate_bar.addWidget(self.copy_picture_btn)
 
-
         self.main_layout.addLayout(
             self.top_operate_bar
         )
@@ -391,13 +390,6 @@ class EditWindow(QWidget):
         self.del_text_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_text_btn)
 
-        # ============ 以下是纯新增按钮（形状+画笔） ============
-        self.model_type = {
-            "画笔": "draw",
-            "矩形": "rect",
-            "圆形": "ellipse",
-            "直线": "line"
-        }
         self.pen_btn = QPushButton("画笔")
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
         self.pen_btn.setFixedSize(65, 30)
@@ -438,10 +430,71 @@ class EditWindow(QWidget):
         self.img_width = 0
         self.img_height = 0
 
-        self.pen_btn.clicked.connect(lambda: self.custom_view.switch_mode("draw"))
-        self.rect_btn.clicked.connect(lambda: self.custom_view.switch_mode("rect"))
-        self.circle_btn.clicked.connect(lambda: self.custom_view.switch_mode("ellipse"))
-        self.line_btn.clicked.connect(lambda: self.custom_view.switch_mode("line"))
+        self.mode_type = {
+            "pen": self.pen_btn,
+            "rect": self.rect_btn,
+            "ellipse": self.circle_btn,
+            "line": self.line_btn
+        }
+        for mode, btn in self.mode_type.items():
+            btn.clicked.connect(lambda checked=False, mode=mode: self.custom_view.switch_mode(mode))
+
+        def model_changed(oid_mode,new_mode):
+            if oid_mode:
+                # 选中态样式不变（保持原蓝色）
+                oid_mode_btn = self.mode_type[oid_mode]
+                oid_mode_btn.setStyleSheet(
+                    """
+                        QPushButton {
+                            border: none;
+                            border-radius: 0;
+                            font-family: "Microsoft YaHei";
+                            font-size: 14px;
+                            color: white;
+                            background-color: #5093e1;
+                            padding: 4px 8px;
+                        }
+                        QPushButton:hover {
+                            background-color: #62a1f0;
+                        }
+                        QPushButton:pressed {
+                            background-color: #3a7bc8;
+                            padding-left: 9px;
+                            padding-top: 5px;
+                        }
+                    """
+                )
+            if new_mode:
+                new_mode_btn = self.mode_type[new_mode]
+                new_mode_btn.setStyleSheet(
+                    """
+                        QPushButton {
+                            border: 2px solid #ff9800;  /* 橙色醒目边框 */
+                            border-radius: 0;
+                            font-family: "Microsoft YaHei";
+                            font-size: 14px;
+                            font-weight: bold;
+                            color: #e68a00;     /* 深橙色文字 */
+                            background-color: #fff8e1;  /* 浅橙背景，温暖且显眼 */
+                            padding: 4px 8px;
+                            box-shadow: 0 1px 3px rgba(255,152,0,0.2);  /* 轻微阴影，提升层次感 */
+                        }
+                        QPushButton:hover {
+                            background-color: #ffecb3;
+                            border-color: #ffa726;
+                            box-shadow: 0 2px 5px rgba(255,152,0,0.3);
+                        }
+                        QPushButton:pressed {
+                            background-color: #ffe082;
+                            border-color: #fb8c00;
+                            padding-left: 9px;
+                            padding-top: 5px;
+                            box-shadow: 0 1px 2px rgba(255,152,0,0.2);
+                        }
+                    """
+                )
+
+        self.custom_view.model_changed.connect(model_changed)
 
         self.pen_style_btn.clicked.connect(self.custom_view.open_pen_style_dialog)
         self.text_style_btn.clicked.connect(self.custom_view.open_text_char_format_dialog)
@@ -667,3 +720,9 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+
+
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())
