@@ -404,7 +404,7 @@ class TextCharFormatDialog(QDialog):
         if color.isValid():
             self.current_style["font_color"] = color
         else:
-            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
+            self.current_style["font_color"] = QColor(Qt.GlobalColor.transparent)
         self.update_selected_text_style()
         self.color_btn.setStyleSheet(
             f"background-color: {self.current_style['font_color'].name()}; border: 1px solid #ccc;")
@@ -434,7 +434,7 @@ class TextCharFormatDialog(QDialog):
         if color.isValid():
             self.current_style["underline_color"] = color
         else:
-            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
+            self.current_style["underline_color"] = QColor(Qt.GlobalColor.transparent)
         self.update_selected_text_style()
         self.underline_color_btn.setStyleSheet(
             f"background-color: {self.current_style['underline_color'].name()}; border: 1px solid #ccc;")
