@@ -76,47 +76,38 @@ class TextCharFormatDialog(QDialog):
             QComboBox{
                 background-color:white;
             }
-            /* 颜色选择按钮样式 */
-
-            #color_btn {
-                background-color: #f8a5c2;
+            /* 通用按钮样式 */
+            QPushButton {
+                border: none;
+                border-radius: none;
+                font-family: "Microsoft YaHei";
+                font-size: 14px;
+                color: white;
+                background-color: #5093e1;
+                padding: 4px 8px;
             }
-            #color_btn:hover {
-                background-color: #fbb8d0;
+            QPushButton:hover {
+                background-color: #62a1f0;
             }
-            #color_btn:pressed {
-                background-color: #e78ca8;
+            QPushButton:pressed {
+                background-color: #3a7bc8;
+                padding-left: 9px;
+                padding-top: 5px;
             }
-            /* 背景色按钮样式 */
-            #bg_color_btn {
-                background-color: #c2f8a5;
+            /* 最小化按钮特殊样式 */
+            #min_window_btn {
+                background-color: transparent;
+                color:#ffff00;
+                font-weight: bold;
+                border-radius: 0;
             }
-            #bg_color_btn:hover {
-                background-color: #d0fbb8;
-            }
-            #bg_color_btn:pressed {
-                background-color: #a8e78c;
+            #min_window_btn:hover {
+                background-color: #a70000;
+                color:#ffffff;
             }
             QComboBox{
                 color:black;
             }
-
-            /* 输入框样式 */
-            QLineEdit {
-                border: 2px solid #d0e1f9;
-                border-radius: 6px;
-                padding: 4px 8px;
-                font-family: "Microsoft YaHei";
-                font-size: 14px;
-                background-color: white;
-                color:black;
-                selection-background-color: #66bfff;
-            }
-            QLineEdit:focus {
-                border-color: #66bfff;
-                outline: none;
-            }
-
             /* 下拉框/SpinBox样式 */
             QFontComboBox, QSpinBox, QComboBox {
                 border: 2px solid #d0e1f9;

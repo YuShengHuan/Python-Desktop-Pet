@@ -1,6 +1,8 @@
+import sys
+
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
                                QPushButton, QLabel, QComboBox, QSlider,
-                               QSpinBox,  QColorDialog)  # QColorButton需注意：部分环境需手动实现
+                               QSpinBox, QColorDialog, QApplication)  # QColorButton需注意：部分环境需手动实现
 from PySide6.QtGui import QPen, QColor, QMouseEvent, QPixmap, QPainter, QBrush
 from PySide6.QtCore import Qt, Signal, QPoint
 
@@ -75,7 +77,7 @@ class PenStyleDialog(QDialog):
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
 
-    def __init__(self, initial_pen: QPen, parent=None):
+    def __init__(self, initial_pen: QPen=QPen(), parent=None):
         super().__init__(parent)
         self.bg_pixmap = QPixmap()
         # 替换为你的图片路径（绝对路径/相对路径均可，支持png/jpg等格式）
@@ -91,11 +93,40 @@ class PenStyleDialog(QDialog):
         self.setObjectName("penStyleDialog")
         self.setStyleSheet(
             """
+            /* 通用按钮样式 */
+            QPushButton {
+                border: none;
+                border-radius: none;
+                font-family: "Microsoft YaHei";
+                font-size: 14px;
+                color: white;
+                background-color: #5093e1;
+                padding: 4px 8px;
+            }
+            QPushButton:hover {
+                background-color: #62a1f0;
+            }
+            QPushButton:pressed {
+                background-color: #3a7bc8;
+                padding-left: 9px;
+                padding-top: 5px;
+            }
+            /* 最小化按钮特殊样式 */
+            #min_window_btn {
+                background-color: transparent;
+                color:#ffff00;
+                font-weight: bold;
+                border-radius: 0;
+            }
+            #min_window_btn:hover {
+                background-color: #a70000;
+                color:#ffffff;
+            }
             QComboBox{
                 background-color:white;
             }
             /* 下拉框/SpinBox样式 */
-            QFontComboBox, QSpinBox {
+            QSpinBox, QComboBox {
                 border: 2px solid #d0e1f9;
                 border-radius: 6px;
                 padding: 4px 8px;
@@ -104,12 +135,39 @@ class PenStyleDialog(QDialog):
                 background-color: white;
                 color:black;
             }
-            QFontComboBox:focus, QSpinBox:focus {
+            QSpinBox:focus, QComboBox:focus {
                 border-color: #66bfff;
                 outline: none;
             }
-            QComboBox{
-               color:black;
+            QComboBox QAbstractItemView {
+                color: #3366FF;
+                background-color: #F5F5F5;
+                selection-background-color: #FFC107;
+            }
+            QComboBox QAbstractItemView::item {
+                color: black;
+                height: 25px;
+            }
+            QComboBox QAbstractItemView::item:selected {
+                color: #3366FF;
+            }
+
+            /* 复选框样式 */
+            QCheckBox {
+                font-family: "Microsoft YaHei";
+                font-size: 14px;
+                color: white;
+                spacing: 8px;
+            }
+            QCheckBox::indicator {
+                border-radius: 4px;
+                background-color: white;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #5093e1;
+            }
+            QCheckBox::indicator:hover {
+                border: 2px solid #66bfff;
             }
             """
         )
