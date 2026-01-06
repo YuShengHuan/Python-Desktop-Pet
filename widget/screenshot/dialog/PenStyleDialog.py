@@ -153,10 +153,10 @@ class PenStyleDialog(QDialog):
         width_layout = QHBoxLayout()
         width_layout.addWidget(QLabel("画笔宽度："))
         self.width_slider = QSlider(Qt.Orientation.Horizontal)
-        self.width_slider.setRange(1, 20)
+        self.width_slider.setRange(1, 100)
         self.width_slider.setValue(self.current_pen.width())
         self.width_spin = QSpinBox()
-        self.width_spin.setRange(1, 20)
+        self.width_spin.setRange(1, 100)
         self.width_spin.setValue(self.current_pen.width())
         self.width_spin.setFixedHeight(30)
         # 联动滑块和输入框

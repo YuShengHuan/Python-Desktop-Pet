@@ -1,3 +1,4 @@
+import copy
 import os.path
 import sys
 
@@ -105,7 +106,7 @@ class EditWindow(QWidget):
                 Qt.TransformationMode.SmoothTransformation  # 平滑缩放，抗锯齿
             )
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
-        #self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(self.width(), 500)
         self.setObjectName("editWindow")
 
@@ -158,13 +159,13 @@ class EditWindow(QWidget):
                         background-color: #3eb8b0;
                     }
 
-                    #clear_picture_btn,#del_text_btn {
+                    #clear_scene_btn,#del_text_btn {
                         background-color: #ff6b6b;
                     }
-                    #clear_picture_btn:hover,#del_text_btn:hover {
+                    #clear_scene_btn:hover,#del_text_btn:hover {
                         background-color: #ff8787;
                     }
-                    #clear_picture_btn:pressed,#del_text_btn:pressed {
+                    #clear_scene_btn:pressed,#del_text_btn:pressed {
                         background-color: #e55353;
                     }
 
@@ -276,16 +277,24 @@ class EditWindow(QWidget):
 
         self.load_picture_btn = QPushButton("加载图片")
         self.load_picture_btn.setObjectName("load_picture_btn")
-        self.load_picture_btn.setFixedSize(100, 30)
+        self.load_picture_btn.setFixedSize(70, 30)
         self.load_picture_btn.clicked.connect(self.load_picture_to_view)
         self.top_operatebar.addWidget(self.load_picture_btn)
 
-        self.clear_picture_btn = QPushButton("清除图片")
-        self.clear_picture_btn.setObjectName("clear_picture_btn")
-        self.clear_picture_btn.setIcon(QIcon("image/icon/clear_picture_btn"))
-        self.clear_picture_btn.setFixedSize(100, 30)
-        self.clear_picture_btn.clicked.connect(self.clear_picture_to_view)
-        self.top_operatebar.addWidget(self.clear_picture_btn)
+        self.select_scene_main_pixmap_fill_color_btn = QPushButton("")
+        self.select_scene_main_pixmap_fill_color_btn.setFixedSize(50, 30)
+        self.select_scene_main_pixmap_fill_color_btn.setObjectName("color_btn")
+        self.select_scene_main_pixmap_fill_color_btn.clicked.connect(self.select_scene_main_pixmap_fill_color)
+        self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
+            f"background-color: {Qt.GlobalColor.white.name}; border: 1px solid #ccc;")
+        self.top_operatebar.addWidget(self.select_scene_main_pixmap_fill_color_btn)
+
+        self.clear_scene_btn = QPushButton("清除")
+        self.clear_scene_btn.setObjectName("clear_scene_btn")
+        self.clear_scene_btn.setIcon(QIcon("image/icon/clear_scene_btn"))
+        self.clear_scene_btn.setFixedSize(50, 30)
+        self.clear_scene_btn.clicked.connect(self.clear_picture_to_view)
+        self.top_operatebar.addWidget(self.clear_scene_btn)
 
         self.status_show_label = QLabel()
         self.status_show_label.setObjectName("status_show_btn")
@@ -303,7 +312,35 @@ class EditWindow(QWidget):
         """)
         self.top_operatebar.addWidget(self.status_show_label)
 
-        self.top_operatebar.addStretch()
+        self.scene_history_operatebar = QHBoxLayout()
+        self.scene_history_operatebar.setSpacing(0)
+        self.scene_history_operatebar.setContentsMargins(0, 0, 0, 0)
+        self.scene_history_operatebar.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.forward_scene_history_btn = QPushButton("")
+        self.forward_scene_history_btn.setIcon(QIcon("image/icon/forward_scene_history_btn.png"))
+        self.forward_scene_history_btn.setFixedSize(30, 30)
+        self.forward_scene_history_btn.setObjectName("forward_scene_history_btn")
+        self.forward_scene_history_btn.clicked.connect(self.forward_scene_history)
+        self.scene_history_operatebar.addWidget(self.forward_scene_history_btn)
+
+        self.save_scene_history_btn = QPushButton("")
+        self.save_scene_history_btn.setIcon(QIcon("image/icon/save_scene_history_btn.png"))
+        self.save_scene_history_btn.setFixedSize(30, 30)
+        self.save_scene_history_btn.setObjectName("save_scene_history_btn")
+        self.save_scene_history_btn.clicked.connect(self.save_scene_history)
+        self.scene_history_operatebar.addWidget(self.save_scene_history_btn)
+
+        self.backward_scene_history_btn = QPushButton("")
+        self.backward_scene_history_btn.setIcon(QIcon("image/icon/backward_scene_history_btn.png"))
+        self.backward_scene_history_btn.setFixedSize(30, 30)
+        self.backward_scene_history_btn.setObjectName("backward_scene_history_btn")
+        self.backward_scene_history_btn.clicked.connect(self.backward_scene_history)
+        self.scene_history_operatebar.addWidget(self.backward_scene_history_btn)
+
+        self.top_operatebar.addLayout(
+            self.scene_history_operatebar
+        )
 
         self.text_style_btn = QPushButton("文字样式")
         self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
@@ -312,14 +349,12 @@ class EditWindow(QWidget):
         self.text_style_btn.clicked.connect(self.open_text_char_format_dialog)
         self.top_operatebar.addWidget(self.text_style_btn)
 
-
         self.pen_style_btn = QPushButton("画笔样式")
         self.pen_style_btn.setFixedSize(100, 30)
         self.pen_style_btn.setObjectName("pen_style_btn")
         self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
         self.pen_style_btn.clicked.connect(self.open_pen_style_dialog)
         self.top_operatebar.addWidget(self.pen_style_btn)
-
 
         self.save_picture_btn = QPushButton("保存图片")
         self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
@@ -416,7 +451,6 @@ class EditWindow(QWidget):
         self.del_text_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_text_btn)
 
-
         # ============ 以下是纯新增按钮（形状+画笔） ============
         self.model_type = {
             "画笔": "draw",
@@ -450,13 +484,94 @@ class EditWindow(QWidget):
 
         self.tool_container_layout.addLayout(self.top_toolbar)
 
-        # 文字
-        self.view = None
-        self.scene = None
+        # 1. 创建场景（初始大小可设为0，后续更新）
+        self.scene = QGraphicsScene()
+        self.scene.setBackgroundBrush(QBrush(QColor(0, 0, 0, 0)))
+        self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
+        self.scene.addItem(self.graphics_group)
+        # 2. 创建视图并配置基础属性（仅执行一次）
+        self.view = QGraphicsView(self.scene)
+        self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.view.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        self.view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        self.scene.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
+        # 3. 样式与边框配置
+        self.view.setStyleSheet("background: transparent;border:none;")
+        # 4. 隐藏滚动条
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # 5. 交互模式
+        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        # 6. 滚轮缩放（绑定事件）
+        self.view.wheelEvent = self._on_wheel_scroll
+        self.view.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # ============ 以下是纯新增：鼠标事件绑定（手绘/形状/橡皮擦） ============
+        def view_mousePressEvent(self_, event: QMouseEvent):
+            self.start_pos = self.view.mapToScene(event.position().toPoint())
+            if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
+                # 手绘模式
+                if self.current_mode == "draw":
+                    self.current_draw_path = QPainterPath()
+                    self.current_draw_path.moveTo(self.start_pos)
+                    self.current_draw_item = QGraphicsPathItem(self.current_draw_path)
+                # 形状绘制
+                elif self.current_mode == "rect":
+                    self.current_draw_item = QGraphicsRectItem(QRectF(self.start_pos, self.start_pos))
+                elif self.current_mode == "ellipse":
+                    self.current_draw_item = QGraphicsEllipseItem(QRectF(self.start_pos, self.start_pos))
+                elif self.current_mode == "line":
+                    self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
+                self.current_draw_item.setPen(self.draw_pen)
+                self.current_draw_item.setFlags(
+                    QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
+                )
+                self.current_draw_item.setZValue(10)
+                self.scene.addItem(self.current_draw_item)
+                return
+            QGraphicsView.mousePressEvent(self_, event)
+
+        def view_mouseMoveEvent(self_, event: QMouseEvent):
+            self.end_pos = self.view.mapToScene(event.position().toPoint())
+            if event.buttons() & Qt.MouseButton.LeftButton and self.current_mode:
+                # 手绘
+                if self.current_mode == "draw":
+                    self.current_draw_path.lineTo(self.end_pos)
+                    self.current_draw_item.setPath(self.current_draw_path)
+                elif self.current_mode in ["rect", "ellipse"]:
+                    self.current_draw_item.setRect(QRectF(self.start_pos, self.end_pos).normalized())
+                elif self.current_mode == "line":
+                    self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
+                return
+            QGraphicsView.mouseMoveEvent(self_, event)
+
+        def view_mouseReleaseEvent(self_, event: QMouseEvent):
+            if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
+                self.current_draw_item = None
+                self.current_draw_path = None
+            QGraphicsView.mouseReleaseEvent(self_, event)
+
+        def view_mouseDoubleClickEvent(self_, event: QMouseEvent):
+            self.current_mode = None
+            QGraphicsView.mouseDoubleClickEvent(self_, event)
+
+        # 绑定事件到视图
+        self.view.mousePressEvent = lambda e: view_mousePressEvent(self.view, e)
+        self.view.mouseMoveEvent = lambda e: view_mouseMoveEvent(self.view, e)
+        self.view.mouseReleaseEvent = lambda e: view_mouseReleaseEvent(self.view, e)
+        self.view.mouseDoubleClickEvent = lambda e: view_mouseDoubleClickEvent(self.view, e)
+
+        # 7. 仅首次将视图添加到布局，避免重复添加
+        self.main_layout.addWidget(self.view, stretch=1)
+
+        # 场景
         self.main_pixmap_item = None
-        self.screenshot_pixmap = None
+        self.main_pixmap = None
+        self.scene_history = []
+        self.scene_history_index = -1
         self.img_width = 0
         self.img_height = 0
+        # 文字
         self.text_char_format = QTextCharFormat()
         self.init_text_char_format()
 
@@ -470,23 +585,73 @@ class EditWindow(QWidget):
         self.current_draw_item = None  # 当前绘制的图形项
         self.current_draw_path = None  # 当前手绘路径
 
-        self._init_graphics_view()
+        def init_graphics():
+            main_pixmap=QPixmap(self.view.width(),self.view.height())
+            main_pixmap.fill(Qt.GlobalColor.white)
+            self.load_graphics_view_scene(
+                main_pixmap
+            )
+
+        QTimer.singleShot(10, lambda: init_graphics())
 
         self.timer_check_status = QTimer()
         self.timer_check_status.timeout.connect(self.checked_status)
         self.timer_check_status.start(200)
 
-
     def checked_status(self):
         text = ""
         if len(self.scene.selectedItems()) > 0:
-            text += " 选中图形 "
+            text += "图形 "
         if self.current_mode:
             for k, v in self.model_type.items():
                 if v == self.current_mode:
-                    text += f" 选择模式：{k} "
+                    text += f" {k} "
                     break
         self.status_show_label.setText(text)
+
+    def forward_scene_history(self):
+        if self.scene_history_index > 0:
+            self.scene_history_index -= 1
+        self.clear_scene_load_history_main_pixmap()
+
+    def clear_scene_load_history_main_pixmap(self, new_scene_pixmap: QPixmap = None):
+        if self.scene:
+            for item in self.scene.items():
+                if self.main_pixmap_item and item != self.main_pixmap_item:
+                    self.scene.removeItem(item)
+        if self.main_pixmap_item:
+            self.main_pixmap_item.setPixmap(
+                new_scene_pixmap if new_scene_pixmap else self.scene_history[self.scene_history_index]
+            )
+            self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+
+    def select_scene_main_pixmap_fill_color(self):
+        color = QColorDialog.getColor(Qt.GlobalColor.white, self, "选择画布颜色")
+        if color.isValid():
+            self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
+                f"background-color: {color.name()}; border: 1px solid #ccc;")
+            main_pixmap = QPixmap(self.view.width(), self.view.height())
+            main_pixmap.fill(color)
+            self.load_graphics_view_scene(
+                main_pixmap
+            )
+
+    def backward_scene_history(self):
+        if self.scene_history_index < len(self.scene_history) - 1:
+            self.scene_history_index += 1
+        self.clear_scene_load_history_main_pixmap()
+
+    def save_scene_history(self):
+        new_scene_pixmap = QPixmap(
+            self.scene_to_image(
+                self.scene
+            )
+        )
+        self.scene_history.append(new_scene_pixmap)
+        self.scene_history_index = len(self.scene_history) - 1
+        self.clear_scene_load_history_main_pixmap(
+            new_scene_pixmap
+        )
 
     def open_text_char_format_dialog(self):
         dialog = TextCharFormatDialog(self.text_char_format, self)
@@ -494,7 +659,6 @@ class EditWindow(QWidget):
         dialog.text_char_format_changed.connect(self.update_selected_text_style)
         dialog.move(QCursor.pos())
         dialog.exec()
-
 
     def open_pen_style_dialog(self):
         # 创建自定义画笔对话框，传入当前画笔
@@ -527,129 +691,36 @@ class EditWindow(QWidget):
         file_img_path = self.select_image()
         if not file_img_path:
             return
-        self.load_screenshot_pixmap(
+        self.load_graphics_view_scene(
             QPixmap(file_img_path)
         )
 
     def clear_picture_to_view(self):
-        self.load_screenshot_pixmap(
-            None
-        )
+        self.load_graphics_view_scene()
 
-    def load_screenshot_pixmap(self, screenshot_pixmap):
-        self.screenshot_pixmap = screenshot_pixmap  # 截图的Pixmap
-        if self.screenshot_pixmap:
-            self.img_width = screenshot_pixmap.width()
-            self.img_height = screenshot_pixmap.height()
-        else:
-            self.img_width = self.view.width()
-            self.img_height = self.view.height()
-        # ========== 优化后的绘图区域 ==========
-        self._init_graphics_view()
-
-    def _init_graphics_view(self):
-        """初始化QGraphicsView（首次创建+后续更新内容）"""
-        # ========== 首次初始化：创建控件并添加到布局 ==========
-        if self.view is None:
-            # 1. 创建场景（初始大小可设为0，后续更新）
-            self.scene = QGraphicsScene()
-            self.scene.setBackgroundBrush(QBrush(QColor(0, 0, 0, 0)))
-            self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
-            self.scene.addItem(self.graphics_group)
-            # 2. 创建视图并配置基础属性（仅执行一次）
-            self.view = QGraphicsView(self.scene)
-            self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
-            self.view.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-            self.view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-            self.scene.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
-            # 3. 样式与边框配置
-            self.view.setStyleSheet("background: transparent;border:none;")
-            # 4. 隐藏滚动条
-            self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            # 5. 交互模式
-            self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-            # 6. 滚轮缩放（绑定事件）
-            self.view.wheelEvent = self._on_wheel_scroll
-            self.view.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-            # ============ 以下是纯新增：鼠标事件绑定（手绘/形状/橡皮擦） ============
-            def view_mousePressEvent(self_, event: QMouseEvent):
-                self.start_pos = self.view.mapToScene(event.position().toPoint())
-                if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
-                    # 手绘模式
-                    if self.current_mode == "draw":
-                        self.current_draw_path = QPainterPath()
-                        self.current_draw_path.moveTo(self.start_pos)
-                        self.current_draw_item = QGraphicsPathItem(self.current_draw_path)
-                    # 形状绘制
-                    elif self.current_mode == "rect":
-                        self.current_draw_item = QGraphicsRectItem(QRectF(self.start_pos, self.start_pos))
-                    elif self.current_mode == "ellipse":
-                        self.current_draw_item = QGraphicsEllipseItem(QRectF(self.start_pos, self.start_pos))
-                    elif self.current_mode == "line":
-                        self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
-                    self.current_draw_item.setPen(self.draw_pen)
-                    self.current_draw_item.setFlags(
-                        QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-                    )
-                    self.current_draw_item.setZValue(10)
-                    self.scene.addItem(self.current_draw_item)
-                    return
-                QGraphicsView.mousePressEvent(self_, event)
-
-            def view_mouseMoveEvent(self_, event: QMouseEvent):
-                self.end_pos = self.view.mapToScene(event.position().toPoint())
-                if event.buttons() & Qt.MouseButton.LeftButton and self.current_mode:
-                    # 手绘
-                    if self.current_mode == "draw":
-                        self.current_draw_path.lineTo(self.end_pos)
-                        self.current_draw_item.setPath(self.current_draw_path)
-                    elif self.current_mode in ["rect", "ellipse"]:
-                        self.current_draw_item.setRect(QRectF(self.start_pos, self.end_pos).normalized())
-                    elif self.current_mode == "line":
-                        self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
-                    return
-                QGraphicsView.mouseMoveEvent(self_, event)
-
-            def view_mouseReleaseEvent(self_, event: QMouseEvent):
-                if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
-                    self.current_draw_item = None
-                    self.current_draw_path = None
-                QGraphicsView.mouseReleaseEvent(self_, event)
-
-            def view_mouseDoubleClickEvent(self_, event: QMouseEvent):
-                self.current_mode = None
-                QGraphicsView.mouseDoubleClickEvent(self_, event)
-
-            # 绑定事件到视图
-            self.view.mousePressEvent = lambda e: view_mousePressEvent(self.view, e)
-            self.view.mouseMoveEvent = lambda e: view_mouseMoveEvent(self.view, e)
-            self.view.mouseReleaseEvent = lambda e: view_mouseReleaseEvent(self.view, e)
-            self.view.mouseDoubleClickEvent = lambda e: view_mouseDoubleClickEvent(self.view, e)
-
-            # 7. 仅首次将视图添加到布局，避免重复添加
-            self.main_layout.addWidget(self.view, stretch=1)
-        # ========== 每次更新截图：重置场景和图片（复用控件） ==========
+    def load_graphics_view_scene(self, main_pixmap: QPixmap = None):
         # 1. 清空场景中旧的图形项（图片+文字），避免残留
         self.scene.clear()
-
+        self.main_pixmap_item = None
+        self.scene_history.clear()
+        self.scene_history_index = -1
+        self.main_pixmap = main_pixmap
         # 3. 创建新的图片项并添加到场景
-        if self.screenshot_pixmap:
-            self.img_width = self.screenshot_pixmap.width()
-            self.img_height = self.screenshot_pixmap.height()
+        if self.main_pixmap:
+            self.img_width = self.main_pixmap.width()
+            self.img_height = self.main_pixmap.height()
 
-            self.pixmap_item = QGraphicsPixmapItem(self.screenshot_pixmap)
-            self.pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            self.pixmap_item.setPos(0, 0)  # 强制图片在场景原点
-            self.scene.addItem(self.pixmap_item)
+            self.main_pixmap_item = QGraphicsPixmapItem(self.main_pixmap)
+            self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            self.main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
+            self.scene.addItem(self.main_pixmap_item)
 
             # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
-            self.scene.setSceneRect(self.pixmap_item.boundingRect())
+            self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
             # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
             self.view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-            self.view.fitInView(self.pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            self.view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
         else:
             self.img_width = self.view.width()
             self.img_height = self.view.height()
@@ -658,7 +729,7 @@ class EditWindow(QWidget):
             self.view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
             self.view.fitInView(self.view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
-
+        self.save_scene_history()
 
     def _on_wheel_scroll(self, event):
         """滚轮缩放视图"""
@@ -748,8 +819,9 @@ class EditWindow(QWidget):
         selected_items = self.scene.selectedItems()
         for item in selected_items:
             self.graphics_group.addToGroup(item)
-    def scene_to_image(self,scene:QGraphicsScene,format=QImage.Format.Format_RGBA8888):
-        image = QImage(scene.sceneRect().size().toSize(), QImage.Format.Format_RGBA8888)
+
+    def scene_to_image(self, scene: QGraphicsScene, format=QImage.Format.Format_RGBA8888):
+        image = QImage(scene.sceneRect().size().toSize(), format)
 
         image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
         # 将场景渲染到图片
@@ -776,7 +848,7 @@ class EditWindow(QWidget):
         orign_icon = self.save_picture_btn.icon()
         try:
             # 创建与场景大小一致的图片
-            image=self.scene_to_image(self.scene)
+            image = self.scene_to_image(self.scene)
             # 保存图片
             if filter_type == "JPG图片 (*.jpg)":
                 # JPG不支持透明，转换为RGB格式
@@ -791,7 +863,7 @@ class EditWindow(QWidget):
         QTimer.singleShot(1000, lambda: self.save_picture_btn.setIcon(orign_icon))
 
     def copy_image(self):
-        orign_icon=self.copy_picture_btn.icon()
+        orign_icon = self.copy_picture_btn.icon()
         try:
             image = self.scene_to_image(self.scene)
             clipboard = QApplication.clipboard()  # 获取系统剪贴板
@@ -804,7 +876,6 @@ class EditWindow(QWidget):
             self.copy_picture_btn.setIcon(QIcon("image/icon/fail.png"))
             print("复制错误", f"失败：{str(e)}")
         QTimer.singleShot(1000, lambda: self.copy_picture_btn.setIcon(orign_icon))
-
 
     def paintEvent(self, event):
         """绘制图片背景（替代原纯色矩形），保留抗锯齿和半透明特性"""
