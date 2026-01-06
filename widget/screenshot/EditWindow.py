@@ -586,13 +586,13 @@ class EditWindow(QWidget):
         self.current_draw_path = None  # 当前手绘路径
 
         def init_graphics():
-            main_pixmap=QPixmap(self.view.width(),self.view.height())
+            main_pixmap = QPixmap(self.view.width(), self.view.height())
             main_pixmap.fill(Qt.GlobalColor.white)
             self.load_graphics_view_scene(
                 main_pixmap
             )
 
-        QTimer.singleShot(10, lambda: init_graphics())
+        init_graphics()
 
         self.timer_check_status = QTimer()
         self.timer_check_status.timeout.connect(self.checked_status)
@@ -608,6 +608,15 @@ class EditWindow(QWidget):
                     text += f" {k} "
                     break
         self.status_show_label.setText(text)
+
+        if self.scene_history_index == 0:
+            self.forward_scene_history_btn.setDisabled(True)
+        else:
+            self.forward_scene_history_btn.setDisabled(False)
+        if self.scene_history_index == len(self.scene_history) - 1:
+            self.backward_scene_history_btn.setDisabled(True)
+        else:
+            self.backward_scene_history_btn.setDisabled(False)
 
     def forward_scene_history(self):
         if self.scene_history_index > 0:

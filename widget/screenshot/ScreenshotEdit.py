@@ -48,7 +48,7 @@ class ScreenshotEdit(QObject):
         if not self.edit_window:
             self.edit_window = EditWindow()
         if capture_rect:
-            self.edit_window.load_screenshot_pixmap(
+            self.edit_window.load_graphics_view_scene(
                 self.capture_rect_to_QPixmap(capture_rect)
             )
         self.edit_window.show()
