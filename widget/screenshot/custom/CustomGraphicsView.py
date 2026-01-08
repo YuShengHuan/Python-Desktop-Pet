@@ -178,8 +178,3 @@ class CustomGraphicsView(QGraphicsView):
             self.current_draw_item = None
             self.current_draw_path = None
         QGraphicsView.mouseReleaseEvent(self, event)
-
-    def mouseDoubleClickEvent(self, event: QMouseEvent):
-        self.model_changed.emit(self.current_mode, None)
-        self.current_mode = None
-        super().mouseDoubleClickEvent(event)

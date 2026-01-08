@@ -233,7 +233,7 @@ class EditWindow(QWidget):
         # 主布局：工具栏容器 + 中间绘图区域
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(10)
+        self.main_layout.setSpacing(5)
 
         # ------ 上工具栏：功能操作（名称/功能按钮） ------
         self.top_window_bar = QHBoxLayout()
@@ -383,12 +383,12 @@ class EditWindow(QWidget):
         self.add_picture_btn.clicked.connect(self.add_pixmap_to_scene)
         self.top_toolbar.addWidget(self.add_picture_btn)
 
-        self.del_text_btn = QPushButton("删除选中")
-        self.del_text_btn.setFixedSize(100, 30)
-        self.del_text_btn.setObjectName("del_text_btn")
-        self.del_text_btn.setIcon(QIcon("image/icon/del_text_btn.png"))
-        self.del_text_btn.clicked.connect(self.delete_selected_item)
-        self.top_toolbar.addWidget(self.del_text_btn)
+        self.del_selected_item_btn = QPushButton("删除选中")
+        self.del_selected_item_btn.setFixedSize(100, 30)
+        self.del_selected_item_btn.setObjectName("del_text_btn")
+        self.del_selected_item_btn.setIcon(QIcon("image/icon/del_selected_item_btn.png"))
+        self.del_selected_item_btn.clicked.connect(self.delete_selected_item)
+        self.top_toolbar.addWidget(self.del_selected_item_btn)
 
         self.pen_btn = QPushButton("画笔")
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
@@ -439,7 +439,7 @@ class EditWindow(QWidget):
         for mode, btn in self.mode_type.items():
             btn.clicked.connect(lambda checked=False, mode=mode: self.custom_view.switch_mode(mode))
 
-        def model_changed(oid_mode,new_mode):
+        def model_changed(oid_mode, new_mode):
             if oid_mode:
                 # 选中态样式不变（保持原蓝色）
                 oid_mode_btn = self.mode_type[oid_mode]
@@ -513,6 +513,12 @@ class EditWindow(QWidget):
         self.timer_check_status.start(200)
 
     def checked_status(self):
+        if len(self.scene.selectedItems())>0:
+            self.del_selected_item_btn.setDisabled(False)
+        else:
+            self.del_selected_item_btn.setDisabled(True)
+
+
         if self.scene_history_index == 0:
             self.forward_scene_history_btn.setDisabled(True)
         else:
@@ -555,7 +561,7 @@ class EditWindow(QWidget):
         self.clear_scene_load_history_main_pixmap()
 
     def save_scene_history(self):
-        new_scene_pixmap = QPixmap(
+        new_scene_pixmap = QPixmap.fromImage(
             self.scene_to_image(
                 self.scene
             )
@@ -657,8 +663,9 @@ class EditWindow(QWidget):
         # 将场景渲染到图片
         painter = QPainter(image)
         # 启用全量高清渲染提示（不仅是抗锯齿）
-        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)  # 核心：图形抗锯齿
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)  # 文本抗锯齿
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)  # 图片缩放平滑
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
         scene.render(painter)
         painter.end()
