@@ -414,9 +414,6 @@ class EditWindow(QWidget):
 
         # 1. 创建场景（初始大小可设为0，后续更新）
         self.scene = QGraphicsScene()
-        self.scene.setBackgroundBrush(QBrush(QColor(0, 0, 0, 0)))
-        self.graphics_group = QGraphicsItemGroup()  # 批量管理图形项的组
-        self.scene.addItem(self.graphics_group)
         # 2. 创建视图并配置基础属性（仅执行一次）
         self.custom_view = CustomGraphicsView(self.scene)
         # 7. 仅首次将视图添加到布局，避免重复添加
@@ -427,8 +424,6 @@ class EditWindow(QWidget):
         self.main_pixmap = None
         self.scene_history = []
         self.scene_history_index = -1
-        self.img_width = 0
-        self.img_height = 0
 
         self.mode_type = {
             "pen": self.pen_btn,
@@ -513,11 +508,10 @@ class EditWindow(QWidget):
         self.timer_check_status.start(200)
 
     def checked_status(self):
-        if len(self.scene.selectedItems())>0:
+        if len(self.scene.selectedItems()) > 0:
             self.del_selected_item_btn.setDisabled(False)
         else:
             self.del_selected_item_btn.setDisabled(True)
-
 
         if self.scene_history_index == 0:
             self.forward_scene_history_btn.setDisabled(True)
@@ -603,31 +597,43 @@ class EditWindow(QWidget):
         self.main_pixmap_item = None
         self.scene_history.clear()
         self.scene_history_index = -1
-        self.main_pixmap = main_pixmap
-        # 3. 创建新的图片项并添加到场景
-        if self.main_pixmap:
-            self.img_width = self.main_pixmap.width()
-            self.img_height = self.main_pixmap.height()
 
+        # 3. 创建新的图片项并添加到场景
+        if main_pixmap:
+            byte_array = QByteArray()
+            buffer = QBuffer(byte_array)
+            buffer.open(QIODevice.OpenModeFlag.WriteOnly)
+            main_pixmap.save(buffer, "PNG")
+            buffer.close()
+            buffer.open(QIODevice.OpenModeFlag.ReadOnly)
+            self.main_pixmap = QPixmap()
+            self.main_pixmap.loadFromData(byte_array)
+            buffer.close()
+
+            pixmap_rect = QRect(0, 0,
+                                self.main_pixmap.width(),
+                                self.main_pixmap.height())
             self.main_pixmap_item = QGraphicsPixmapItem(self.main_pixmap)
             self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
             self.main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
             self.scene.addItem(self.main_pixmap_item)
 
             # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
-            self.scene.setSceneRect(self.main_pixmap_item.boundingRect())
+            self.scene.setSceneRect(pixmap_rect)
             # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
             self.custom_view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-            self.custom_view.fitInView(self.main_pixmap_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            self.custom_view.fitInView(pixmap_rect,
+                                       Qt.AspectRatioMode.KeepAspectRatio)
         else:
-            self.img_width = self.custom_view.width()
-            self.img_height = self.custom_view.height()
-            self.scene.setSceneRect(QRect(0, 0, self.img_width, self.img_height))
+            pixmap_rect = QRect(0, 0,
+                                self.custom_view.width(),
+                                self.custom_view.height())
+            self.scene.setSceneRect(self.custom_view.geometry())
             # 关键2：重置视图变换矩阵，清除之前的缩放/平移残留
             self.custom_view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
-            self.custom_view.fitInView(self.custom_view.geometry(), Qt.AspectRatioMode.KeepAspectRatio)
+            self.custom_view.fitInView(pixmap_rect, Qt.AspectRatioMode.KeepAspectRatio)
         self.save_scene_history()
 
     def add_text_to_scene(self):
@@ -727,3 +733,8 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+
+# app = QApplication(sys.argv)
+# w = EditWindow()
+# w.show()
+# sys.exit(app.exec())

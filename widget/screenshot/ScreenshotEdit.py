@@ -26,13 +26,14 @@ class ScreenshotEdit(QObject):
         self.current_operate_index = 1
 
     def capture_rect_to_QPixmap(self,capture_rect: QRect):
-        return QApplication.primaryScreen().grabWindow(
+        pixmap=QApplication.primaryScreen().grabWindow(
             0,  # 窗口句柄：0表示桌面（关键）
             capture_rect.x(),
             capture_rect.y(),
             capture_rect.width(),
             capture_rect.height()
         )
+        return pixmap
 
     def current_screenshot_select_area(self, capture_rect: QRect = None):
         if self.current_operate_index == 1:

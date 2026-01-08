@@ -172,15 +172,16 @@ class OffWorkWindow(QWidget):
             (time(9, 0, 0), time(12, 0, 0)),
             (time(13, 30, 0), time(17, 30, 0))
         ]
+        target_time=None
         for r_time in self.target_time_array:
             if self.is_in_time_range(r_time):
-                self.target_time = r_time[1]
+                target_time = r_time[1]
         now = datetime.now()
-        if not self.target_time:
+        if not target_time:
             self.text = f"{now.strftime('%H:%M:%S')}"
         else:
             # 构造今日18:00的datetime对象
-            target_datetime = datetime.combine(now.date(), self.target_time)
+            target_datetime = datetime.combine(now.date(), target_time)
 
             # 计算时间差（若已过目标时间，差值为0）
             diff = (target_datetime - now).total_seconds()
