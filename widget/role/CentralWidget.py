@@ -134,7 +134,8 @@ class CentralWidget(QWidget):
         self.roleInteractManagement.interact_name_changed.emit(action.text())
     def predict_finished_to_view(self,status,data):
         print(f"识别状态为：{status}")
-        self.agentWindow.append_data_to_view(data)
+        if status==0:
+           self.agentWindow.append_data_to_view(data)
 
     def start_register_system_global_shortcuts(self):
         # 1. 创建工作类实例 + 子线程实例（核心：不移动主对象，只移动工作类）

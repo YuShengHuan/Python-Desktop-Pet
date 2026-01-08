@@ -157,7 +157,7 @@ class ScreenshotWindow(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = False
             self.is_resizing = True
-        if self.event_count == 0:
+        if self.event_count == 0 and event.button() == Qt.MouseButton.RightButton:
             self.click()
         else:
             self.event_count = 0
