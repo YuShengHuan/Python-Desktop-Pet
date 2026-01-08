@@ -665,14 +665,18 @@ class EditWindow(QWidget):
 
     def scene_to_image(self, scene: QGraphicsScene, format=QImage.Format.Format_RGBA8888):
         image = QImage(scene.sceneRect().size().toSize(), format)
-        image.fill(Qt.GlobalColor.white)  # 背景设为白色（更符合常规图片）
-        # 将场景渲染到图片
+        image.fill(Qt.GlobalColor.white)  # 背景设为白色
         painter = QPainter(image)
-        # 启用全量高清渲染提示（不仅是抗锯齿）
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)  # 核心：图形抗锯齿
-        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)  # 文本抗锯齿
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)  # 图片缩放平滑
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)  # 无损图片渲染（Qt6.5+）
+        # 1. 基础抗锯齿（必开）
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        # 2. 新增高清渲染项（关键）
+        painter.setRenderHint(QPainter.RenderHint.NonCosmeticBrushPatterns, True)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)
+        painter.setRenderHint(QPainter.RenderHint.VerticalSubpixelPositioning, True)
+
+        # ========== 渲染场景 ==========
         scene.render(painter)
         painter.end()
         return image
@@ -733,8 +737,3 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
-
-# app = QApplication(sys.argv)
-# w = EditWindow()
-# w.show()
-# sys.exit(app.exec())
