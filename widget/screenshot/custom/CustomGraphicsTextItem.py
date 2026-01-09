@@ -14,8 +14,6 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
         self.open_edit = False
         self.first_init = True
         self.setPlainText(text)
-        # 选中状态标记
-        self._is_item_selected = False
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.setSelected(True)
@@ -36,36 +34,23 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
         self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
         self.open_edit = False
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        text_cursor = self.textCursor()
-        if not text_cursor.hasSelection():
-            self._is_item_selected = False
-        super().mouseReleaseEvent(event)
-
-    def setSelected(self, selected: bool) -> None:
-        """重写选中方法，记录图形项状态"""
-        super().setSelected(selected)
-        self._is_item_selected = selected
-        self.update()
-
     def apply_style_to_selected(self, format: QTextCharFormat):
         """应用样式到文本（PySide6原生API）"""
         doc = self.document()
         cursor = QTextCursor(doc)
         text_cursor = self.textCursor()
         if self.open_edit:
-            if self._is_item_selected:
+            if text_cursor.hasSelection():
                 # 应用到选中的文本片段
                 cursor.setPosition(text_cursor.selectionStart())
                 cursor.setPosition(text_cursor.selectionEnd(), QTextCursor.MoveMode.KeepAnchor)
             else:
-                # 关键：将目标光标同步到当前真实光标位置（不选中任何内容，仅定位）
                 cursor.setPosition(text_cursor.position(), QTextCursor.MoveMode.MoveAnchor)
         elif self.first_init:
             cursor.select(QTextCursor.SelectionType.Document)
             self.first_init = False
         cursor.mergeCharFormat(format)
         doc.setModified(True)
-        if self.open_edit and not self._is_item_selected:
+        if self.open_edit and not text_cursor.hasSelection():
             self.setTextCursor(cursor)
         self.update()
