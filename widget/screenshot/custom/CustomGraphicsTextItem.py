@@ -66,6 +66,6 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
             self.first_init = False
         cursor.mergeCharFormat(format)
         doc.setModified(True)
-        if self.open_edit:
+        if self.open_edit and not self._is_item_selected:
             self.setTextCursor(cursor)
         self.update()
