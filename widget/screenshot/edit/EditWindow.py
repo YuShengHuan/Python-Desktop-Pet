@@ -290,6 +290,8 @@ class EditWindow(QWidget):
         self.clear_scene_btn.clicked.connect(self.clear_picture_to_view)
         self.top_operate_bar.addWidget(self.clear_scene_btn)
 
+
+
         self.scene_history_operatebar = QHBoxLayout()
         self.scene_history_operatebar.setSpacing(0)
         self.scene_history_operatebar.setContentsMargins(0, 0, 0, 0)
@@ -319,30 +321,31 @@ class EditWindow(QWidget):
         self.top_operate_bar.addLayout(
             self.scene_history_operatebar
         )
+        self.top_operate_bar.addStretch()
 
-        self.text_style_btn = QPushButton("文字样式")
+        self.text_style_btn = QPushButton()
         self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
-        self.text_style_btn.setFixedSize(100, 30)
+        self.text_style_btn.setFixedSize(30, 30)
         self.text_style_btn.setObjectName("pen_style_btn")
 
         self.top_operate_bar.addWidget(self.text_style_btn)
 
-        self.pen_style_btn = QPushButton("画笔样式")
-        self.pen_style_btn.setFixedSize(100, 30)
+        self.pen_style_btn = QPushButton()
+        self.pen_style_btn.setFixedSize(30, 30)
         self.pen_style_btn.setObjectName("pen_style_btn")
         self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
         self.top_operate_bar.addWidget(self.pen_style_btn)
 
-        self.save_picture_btn = QPushButton("保存图片")
+        self.save_picture_btn = QPushButton()
         self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
-        self.save_picture_btn.setFixedSize(100, 30)
+        self.save_picture_btn.setFixedSize(30, 30)
         self.save_picture_btn.clicked.connect(self.save_image)
         self.save_picture_btn.setObjectName("save_btn")
         self.top_operate_bar.addWidget(self.save_picture_btn)
 
-        self.copy_picture_btn = QPushButton("复制图片")
+        self.copy_picture_btn = QPushButton()
         self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
-        self.copy_picture_btn.setFixedSize(100, 30)
+        self.copy_picture_btn.setFixedSize(30, 30)
         self.copy_picture_btn.setObjectName("copy_btn")
         self.copy_picture_btn.clicked.connect(self.copy_image)
         self.top_operate_bar.addWidget(self.copy_picture_btn)
@@ -369,27 +372,28 @@ class EditWindow(QWidget):
         self.text_edit.setFixedSize(150, 30)
         self.top_toolbar.addWidget(self.text_edit)
 
-        self.add_text_btn = QPushButton("添加文字")
-        self.add_text_btn.setFixedSize(90, 30)
+        self.add_text_btn = QPushButton()
+        self.add_text_btn.setFixedSize(30, 30)
         self.add_text_btn.setObjectName("add_text_btn")
         self.add_text_btn.setIcon(QIcon("image/icon/add_text_btn.png"))
         self.add_text_btn.clicked.connect(self.add_text_to_scene)
         self.top_toolbar.addWidget(self.add_text_btn)
 
-        self.add_picture_btn = QPushButton("添加图片")
-        self.add_picture_btn.setFixedSize(90, 30)
+        self.add_picture_btn = QPushButton()
+        self.add_picture_btn.setFixedSize(30, 30)
         self.add_picture_btn.setObjectName("add_pixmap_btn")
         self.add_picture_btn.setIcon(QIcon("image/icon/add_picture_btn.png"))
         self.add_picture_btn.clicked.connect(self.add_pixmap_to_scene)
         self.top_toolbar.addWidget(self.add_picture_btn)
 
-        self.del_selected_item_btn = QPushButton("删除选中")
-        self.del_selected_item_btn.setFixedSize(100, 30)
+        self.del_selected_item_btn = QPushButton()
+        self.del_selected_item_btn.setFixedSize(30, 30)
         self.del_selected_item_btn.setObjectName("del_text_btn")
         self.del_selected_item_btn.setIcon(QIcon("image/icon/del_selected_item_btn.png"))
         self.del_selected_item_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_selected_item_btn)
 
+        self.top_toolbar.addStretch()
         self.pen_btn = QPushButton()
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
         self.pen_btn.setFixedSize(30, 30)
