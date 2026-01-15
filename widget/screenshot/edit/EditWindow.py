@@ -390,25 +390,30 @@ class EditWindow(QWidget):
         self.del_selected_item_btn.clicked.connect(self.delete_selected_item)
         self.top_toolbar.addWidget(self.del_selected_item_btn)
 
-        self.pen_btn = QPushButton("画笔")
+        self.pen_btn = QPushButton()
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
-        self.pen_btn.setFixedSize(65, 30)
+        self.pen_btn.setFixedSize(30, 30)
         self.top_toolbar.addWidget(self.pen_btn)
 
-        self.rect_btn = QPushButton("矩形")
+        self.rect_btn = QPushButton()
         self.rect_btn.setIcon(QIcon("image/icon/rect_btn.png"))
-        self.rect_btn.setFixedSize(65, 30)
+        self.rect_btn.setFixedSize(30, 30)
         self.top_toolbar.addWidget(self.rect_btn)
 
-        self.circle_btn = QPushButton("圆形")
+        self.circle_btn = QPushButton()
         self.circle_btn.setIcon(QIcon("image/icon/circle_btn.png"))
-        self.circle_btn.setFixedSize(65, 30)
+        self.circle_btn.setFixedSize(30, 30)
         self.top_toolbar.addWidget(self.circle_btn)
 
-        self.line_btn = QPushButton("直线")
+        self.line_btn = QPushButton()
         self.line_btn.setIcon(QIcon("image/icon/line_btn.png"))
-        self.line_btn.setFixedSize(65, 30)
+        self.line_btn.setFixedSize(30, 30)
         self.top_toolbar.addWidget(self.line_btn)
+
+        self.arrow_btn = QPushButton()
+        self.arrow_btn.setIcon(QIcon("image/icon/arrow_btn.png"))
+        self.arrow_btn.setFixedSize(30, 30)
+        self.top_toolbar.addWidget(self.arrow_btn)
 
         self.tool_container_layout.addLayout(self.top_toolbar)
 
@@ -429,7 +434,8 @@ class EditWindow(QWidget):
             "pen": self.pen_btn,
             "rect": self.rect_btn,
             "ellipse": self.circle_btn,
-            "line": self.line_btn
+            "line": self.line_btn,
+            "arrow":self.arrow_btn
         }
         for mode, btn in self.mode_type.items():
             btn.clicked.connect(lambda checked=False, mode=mode: self.custom_view.switch_mode(mode))
@@ -737,3 +743,7 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())

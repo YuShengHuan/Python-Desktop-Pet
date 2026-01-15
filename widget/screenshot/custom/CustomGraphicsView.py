@@ -2,6 +2,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
+from widget.screenshot.custom.CustomGraphicsArrowItem import CustomGraphicsArrowItem
 from widget.screenshot.custom.CustomGraphicsPixmapItem import CustomGraphicsPixmapItem
 from widget.screenshot.custom.CustomGraphicsTextItem import CustomGraphicsTextItem
 from widget.screenshot.dialog.PenStyleDialog import PenStyleDialog
@@ -13,8 +14,6 @@ class CustomGraphicsView(QGraphicsView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.polygon_vertices = None
         self.parent = parent
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -105,7 +104,7 @@ class CustomGraphicsView(QGraphicsView):
         text_item.setZValue(10)
         # 允许文字拖拽移动、选中、聚焦
         text_item.setFlags(
-            QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable|QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable
+            QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable | QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable
         )
         # 添加到场景和列表
         self.parent.addItem(text_item)
@@ -159,6 +158,8 @@ class CustomGraphicsView(QGraphicsView):
                 self.current_draw_item = QGraphicsEllipseItem(QRectF(self.start_pos, self.start_pos))
             elif self.current_mode == "line":
                 self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
+            elif self.current_mode == "arrow":
+                self.current_draw_item = CustomGraphicsArrowItem(QLineF(self.start_pos, self.start_pos))
             self.current_draw_item.setPen(self.draw_pen)
             self.current_draw_item.setZValue(10)
             self.parent.addItem(self.current_draw_item)
@@ -183,6 +184,8 @@ class CustomGraphicsView(QGraphicsView):
                 self.current_draw_item.setRect(QRectF(self.start_pos, self.end_pos).normalized())
             elif self.current_mode == "line":
                 self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
+            elif self.current_mode == "arrow":
+                self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
         elif self._is_right_dragging and event.buttons() == Qt.MouseButton.RightButton:
             # 1. 计算鼠标移动的偏移量（当前位置 - 初始位置）
             current_pos = self.mapToGlobal(event.pos())
@@ -194,6 +197,7 @@ class CustomGraphicsView(QGraphicsView):
             self._drag_start_pos = current_pos
         else:
             super().mouseMoveEvent(event)
+
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:
             # 1. 标记结束拖动
