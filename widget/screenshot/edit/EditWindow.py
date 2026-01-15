@@ -88,7 +88,7 @@ class EditWindow(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.resize_direction = None
-        self.add_file_dir = ".."
+        self.add_file_dir = "./data"
         self.bg_pixmap = QPixmap()
         # 替换为你的图片路径（绝对路径/相对路径均可，支持png/jpg等格式）
         img_path = "image/bg/screenshot_edit.png"  # 示例：同目录下的background.png
@@ -687,7 +687,7 @@ class EditWindow(QWidget):
         file_path, filter_type = QFileDialog.getSaveFileName(
             self,
             "保存图片",
-            f"截图_{QDateTime.currentDateTime().toString('yyyyMMddhhmmss')}",  # 自动生成文件名
+            f"{QDateTime.currentDateTime().toString('yyyyMMddhhmmss')}",  # 自动生成文件名
             "PNG图片 (*.png);;JPG图片 (*.jpg);;所有文件 (*.*)"
         )
         if not file_path:

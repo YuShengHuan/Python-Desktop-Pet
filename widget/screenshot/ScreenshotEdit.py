@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from PySide6.QtCore import QRect, QObject
+from PySide6.QtCore import QRect, QObject, QDateTime
 from PySide6.QtWidgets import QApplication
 
 from widget.screenshot.edit.EditWindow import EditWindow
@@ -11,10 +11,11 @@ from PySide6.QtGui import *
 
 class ScreenshotEdit(QObject):
 
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.edit_window = None
         self.screenshot_window = None
+        self.screenshot_save_dir = "data/"
         self.paddleOCRManagement = PaddleOCRManagement()
         self.select_area = QRect()
 
@@ -25,8 +26,8 @@ class ScreenshotEdit(QObject):
         self.open_screenshot_window()
         self.current_operate_index = 1
 
-    def capture_rect_to_QPixmap(self,capture_rect: QRect):
-        pixmap=QApplication.primaryScreen().grabWindow(
+    def capture_rect_to_QPixmap(self, capture_rect: QRect):
+        pixmap = QApplication.primaryScreen().grabWindow(
             0,  # 窗口句柄：0表示桌面（关键）
             capture_rect.x(),
             capture_rect.y(),
@@ -46,8 +47,10 @@ class ScreenshotEdit(QObject):
         if not self.edit_window:
             self.edit_window = EditWindow()
         if capture_rect:
+            pixmap = self.capture_rect_to_QPixmap(capture_rect)
+            pixmap.save(self.screenshot_save_dir+f"{QDateTime.currentDateTime().toString('yyyyMMddhhmmss')}.png")
             self.edit_window.load_graphics_view_scene(
-                self.capture_rect_to_QPixmap(capture_rect)
+                pixmap
             )
         self.edit_window.show()
 

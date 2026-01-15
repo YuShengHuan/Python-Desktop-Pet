@@ -13,6 +13,8 @@ class CustomGraphicsView(QGraphicsView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.polygon_vertices = None
         self.parent = parent
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -23,8 +25,7 @@ class CustomGraphicsView(QGraphicsView):
         # 4. 隐藏滚动条
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # 5. 交互模式
-        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # 文字
@@ -40,6 +41,14 @@ class CustomGraphicsView(QGraphicsView):
         self.current_mode = None
         self.current_draw_item = None  # 当前绘制的图形项
         self.current_draw_path = None  # 当前手绘路径
+
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
+
+        # 拖动状态变量（对应Qt内部封装的状态）
+        self._is_right_dragging = False  # 是否处于右键拖动中
+        self._drag_start_pos = QPoint()  # 拖动起始位置（viewport坐标系）
+
+        # 对应ScrollHandDrag的“拖动开始”逻辑（替换为右键触发）
 
     def open_text_char_format_dialog(self):
         dialog = TextCharFormatDialog(self.text_char_format, self)
@@ -95,9 +104,9 @@ class CustomGraphicsView(QGraphicsView):
         ))
         text_item.setZValue(10)
         # 允许文字拖拽移动、选中、聚焦
-        text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable)
-        text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable)
-        text_item.setFlag(QGraphicsTextItem.GraphicsItemFlag.ItemIsFocusable)
+        text_item.setFlags(
+            QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable|QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable
+        )
         # 添加到场景和列表
         self.parent.addItem(text_item)
 
@@ -151,13 +160,17 @@ class CustomGraphicsView(QGraphicsView):
             elif self.current_mode == "line":
                 self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
             self.current_draw_item.setPen(self.draw_pen)
-            self.current_draw_item.setFlags(
-                QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-            )
             self.current_draw_item.setZValue(10)
             self.parent.addItem(self.current_draw_item)
-            return
-        super().mousePressEvent(event)
+        elif event.button() == Qt.MouseButton.RightButton:
+            # 1. 标记开始拖动
+            self._is_right_dragging = True
+            # 2. 记录鼠标按下时的初始位置（必须用viewport的坐标）
+            self._drag_start_pos = self.mapToGlobal(event.pos())
+            # 3. 模拟ScrollHandDrag的手型光标
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+        else:
+            super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent):
         self.end_pos = self.mapToScene(event.position().toPoint())
@@ -170,11 +183,22 @@ class CustomGraphicsView(QGraphicsView):
                 self.current_draw_item.setRect(QRectF(self.start_pos, self.end_pos).normalized())
             elif self.current_mode == "line":
                 self.current_draw_item.setLine(QLineF(self.start_pos, self.end_pos))
-            return
-        super().mouseMoveEvent(event)
-
+        elif self._is_right_dragging and event.buttons() == Qt.MouseButton.RightButton:
+            # 1. 计算鼠标移动的偏移量（当前位置 - 初始位置）
+            current_pos = self.mapToGlobal(event.pos())
+            delta = current_pos - self._drag_start_pos
+            # 2. 平移视图（偏移量取反：鼠标右移→视图左移，和ScrollHandDrag完全一致）
+            self.horizontalScrollBar().setValue(int(self.horizontalScrollBar().value() - delta.x()))
+            self.verticalScrollBar().setValue(int(self.verticalScrollBar().value() - delta.y()))
+            # 3. 更新初始位置，实现连续拖动
+            self._drag_start_pos = current_pos
+        else:
+            super().mouseMoveEvent(event)
     def mouseReleaseEvent(self, event: QMouseEvent):
-        if event.button() == Qt.MouseButton.LeftButton and self.current_mode:
-            self.current_draw_item = None
-            self.current_draw_path = None
-        QGraphicsView.mouseReleaseEvent(self, event)
+        if event.button() == Qt.MouseButton.RightButton:
+            # 1. 标记结束拖动
+            self._is_right_dragging = False
+            # 2. 恢复默认光标
+            self.unsetCursor()
+        else:
+            super().mouseReleaseEvent(event)
