@@ -748,7 +748,7 @@ class EditWindow(QWidget):
             painter.drawRect(self.rect())
 
 
-app = QApplication(sys.argv)
-w = EditWindow()
-w.show()
-sys.exit(app.exec())
+# app = QApplication(sys.argv)
+# w = EditWindow()
+# w.show()
+# sys.exit(app.exec())
