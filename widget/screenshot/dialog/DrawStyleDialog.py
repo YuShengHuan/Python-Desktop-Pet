@@ -34,8 +34,6 @@ class QColorButton(QPushButton):
             # 4. 获取选中的带Alpha值的颜色
             color = color_dialog.selectedColor()
             if color.isValid():
-                if color.alpha() == 0:
-                    color = QColor(Qt.GlobalColor.transparent)
                 self.current_color = color
                 self.update_style()
                 self.color_changed.emit(color)

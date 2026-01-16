@@ -409,8 +409,6 @@ class TextCharFormatDialog(QDialog):
             # 4. 获取选中的带Alpha值的颜色
             color = color_dialog.selectedColor()
             if color.isValid():
-                if color.alpha() == 0:
-                    color = QColor(Qt.GlobalColor.transparent)
                 self.current_style[key_name] = color
                 self.update_selected_text_style()
                 btn.setStyleSheet(

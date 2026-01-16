@@ -5,6 +5,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from widget.screenshot.custom.CustomGraphicsView import CustomGraphicsView
+from widget.util import WindowStatic
 
 
 class EditWindow(QWidget):
@@ -549,17 +550,18 @@ class EditWindow(QWidget):
             self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
     def select_scene_main_pixmap_fill_color(self):
-        color = QColorDialog.getColor(Qt.GlobalColor.white, self, "选择画布颜色")
-        if color.isValid():
-            self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
-                f"background-color: {('transparent' if color.alpha() == 0 else color.name())}; border: 1px solid #ccc;")
-            main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
-            if color.alpha() == 0:
-                color = QColor(Qt.GlobalColor.transparent)
-            main_pixmap.fill(color)
-            self.load_graphics_view_scene(
-                main_pixmap
-            )
+        color_dialog = QColorDialog(Qt.GlobalColor.white, self)
+        # 3. 弹出对话框并判断是否确认选择
+        if color_dialog.exec():
+            # 4. 获取选中的带Alpha值的颜色
+            color = color_dialog.selectedColor()
+            if color.isValid():
+                self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
+                    f"background-color: {color.name()}; border: 1px solid #ccc;")
+                main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
+                self.load_graphics_view_scene(
+                    main_pixmap
+                )
 
     def backward_scene_history(self):
         if self.scene_history_index < len(self.scene_history) - 1:
