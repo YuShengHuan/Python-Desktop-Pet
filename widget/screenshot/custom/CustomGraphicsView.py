@@ -122,10 +122,10 @@ class CustomGraphicsView(QGraphicsView):
         # 设置文字属性
         text_item.apply_style_to_selected(self.text_char_format)  # 新文字默认应用全部样式
         text_item.setPos(QPointF(
-            self.width() / 2.5 - text_item.boundingRect().width() / 2,
-            self.height() / 1.5 - text_item.boundingRect().height() / 2,
+            self.width() / 2.5,
+            self.height() / 2.5,
         ))
-        text_item.setZValue(10)
+        text_item.setZValue(11)
         # 允许文字拖拽移动、选中、聚焦
         text_item.setFlags(
             QGraphicsTextItem.GraphicsItemFlag.ItemIsMovable | QGraphicsTextItem.GraphicsItemFlag.ItemIsSelectable
@@ -136,8 +136,8 @@ class CustomGraphicsView(QGraphicsView):
     def add_pixmap_to_scene(self, file_img_path):
         pixmap_item = CustomGraphicsPixmapItem(QPixmap(file_img_path))
         pixmap_item.setPos(QPointF(
-            self.width() / 2.5 - pixmap_item.boundingRect().width() / 2,
-            self.height() / 1.5 - pixmap_item.boundingRect().height() / 2,
+            self.width() / 5,
+            self.height() / 5,
         ))
         pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
         pixmap_item.setFlags(

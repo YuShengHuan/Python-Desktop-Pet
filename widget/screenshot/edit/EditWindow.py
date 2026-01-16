@@ -539,6 +539,7 @@ class EditWindow(QWidget):
                 new_scene_pixmap if new_scene_pixmap else self.scene_history[self.scene_history_index]
             )
             self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+
     def select_scene_bg_color(self):
         color_dialog = QColorDialog(self.scene_bg_color, self)
         color_dialog.setOptions(QColorDialog.ColorDialogOption.ShowAlphaChannel)
@@ -547,7 +548,7 @@ class EditWindow(QWidget):
             # 4. 获取选中的带Alpha值的颜色
             color = color_dialog.selectedColor()
             if color.isValid():
-                self.scene_bg_color=color
+                self.scene_bg_color = color
                 self.select_scene_bg_color_btn.setStyleSheet(
                     f"background-color: {WindowStatic.get_color(color)}; border: 1px solid #ccc;")
                 main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
@@ -745,3 +746,9 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
+
+
+app = QApplication(sys.argv)
+w = EditWindow()
+w.show()
+sys.exit(app.exec())
