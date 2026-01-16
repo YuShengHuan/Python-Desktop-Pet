@@ -88,6 +88,7 @@ class EditWindow(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.scene_bg_color = QColor(Qt.GlobalColor.transparent)
         self.resize_direction = None
         self.add_file_dir = "./data"
         self.bg_pixmap = QPixmap()
@@ -101,7 +102,7 @@ class EditWindow(QWidget):
                 Qt.TransformationMode.SmoothTransformation  # 平滑缩放，抗锯齿
             )
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
-        #self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(self.width(), 500)
         self.setObjectName("editWindow")
 
@@ -284,7 +285,7 @@ class EditWindow(QWidget):
         self.select_scene_bg_color_btn.clicked.connect(self.select_scene_bg_color)
         self.select_scene_bg_color_btn.setToolTip("选择场景颜色")
         self.select_scene_bg_color_btn.setStyleSheet(
-            f"background-color: {Qt.GlobalColor.white.name}; border: 1px solid #ccc;")
+            f"background-color: {WindowStatic.get_color(self.scene_bg_color)}; border: 1px solid #ccc;")
         self.top_operate_bar.addWidget(self.select_scene_bg_color_btn)
 
         self.clear_scene_btn = QPushButton()
@@ -499,15 +500,6 @@ class EditWindow(QWidget):
         self.draw_style_btn.clicked.connect(self.custom_view.open_pen_style_dialog)
         self.text_style_btn.clicked.connect(self.custom_view.open_text_char_format_dialog)
 
-        def init_graphics():
-            main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
-            main_pixmap.fill(Qt.GlobalColor.white)
-            self.load_graphics_view_scene(
-                main_pixmap
-            )
-
-        init_graphics()
-
         self.timer_check_status = QTimer()
         self.timer_check_status.timeout.connect(self.checked_status)
         self.timer_check_status.start(200)
@@ -517,6 +509,11 @@ class EditWindow(QWidget):
             self.del_selected_item_btn.setDisabled(False)
         else:
             self.del_selected_item_btn.setDisabled(True)
+
+        if len(self.scene.items()) > 0:
+            self.clear_scene_btn.setDisabled(False)
+        else:
+            self.clear_scene_btn.setDisabled(True)
 
         if self.scene_history_index == 0:
             self.forward_scene_history_btn.setDisabled(True)
@@ -542,16 +539,17 @@ class EditWindow(QWidget):
                 new_scene_pixmap if new_scene_pixmap else self.scene_history[self.scene_history_index]
             )
             self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-
     def select_scene_bg_color(self):
-        color_dialog = QColorDialog(Qt.GlobalColor.white, self)
+        color_dialog = QColorDialog(self.scene_bg_color, self)
+        color_dialog.setOptions(QColorDialog.ColorDialogOption.ShowAlphaChannel)
         # 3. 弹出对话框并判断是否确认选择
         if color_dialog.exec():
             # 4. 获取选中的带Alpha值的颜色
             color = color_dialog.selectedColor()
             if color.isValid():
+                self.scene_bg_color=color
                 self.select_scene_bg_color_btn.setStyleSheet(
-                    f"background-color: {color.name()}; border: 1px solid #ccc;")
+                    f"background-color: {WindowStatic.get_color(color)}; border: 1px solid #ccc;")
                 main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
                 main_pixmap.fill(color)
                 self.load_graphics_view_scene(
@@ -598,6 +596,9 @@ class EditWindow(QWidget):
         )
 
     def clear_picture_to_view(self):
+        self.scene_bg_color = QColor(Qt.GlobalColor.transparent)
+        self.select_scene_bg_color_btn.setStyleSheet(
+            f"background-color: {WindowStatic.get_color(self.scene_bg_color)}; border: 1px solid #ccc;")
         self.load_graphics_view_scene()
 
     def load_graphics_view_scene(self, main_pixmap: QPixmap = None):
@@ -673,7 +674,7 @@ class EditWindow(QWidget):
 
     def scene_to_image(self, scene: QGraphicsScene, format=QImage.Format.Format_RGBA8888):
         image = QImage(scene.sceneRect().size().toSize(), format)
-        image.fill(Qt.GlobalColor.white)  # 背景设为白色
+        image.fill(self.scene_bg_color)  # 背景设为白色
         painter = QPainter(image)
         # 1. 基础抗锯齿（必开）
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -683,7 +684,6 @@ class EditWindow(QWidget):
         painter.setRenderHint(QPainter.RenderHint.NonCosmeticBrushPatterns, True)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering, True)
         painter.setRenderHint(QPainter.RenderHint.VerticalSubpixelPositioning, True)
-
         # ========== 渲染场景 ==========
         scene.render(painter)
         painter.end()

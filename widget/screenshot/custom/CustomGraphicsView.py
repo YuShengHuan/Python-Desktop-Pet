@@ -38,6 +38,11 @@ class CustomGraphicsView(QGraphicsView):
         self.draw_brush = QBrush()
         self.init_draw_brush()  # 初始化画笔
 
+        self.draw_pen_dict = {
+        }
+        self.draw_brush_dict = {
+        }
+
         self.start_pos = None
         self.end_pos = None
         self.current_mode = None
@@ -74,17 +79,32 @@ class CustomGraphicsView(QGraphicsView):
 
     def open_pen_style_dialog(self):
         # 创建自定义画笔对话框，传入当前画笔
-        dialog = DrawStyleDialog(self.draw_pen, self.draw_brush, self)
+        dialog = DrawStyleDialog(
+            self.get_current_mode_pen(),
+            self.get_current_mode_brush(),
+            self)
         # 绑定确认信号
         dialog.pen_confirmed.connect(self.update_custom_pen)
         # 显示对话框
         dialog.move(QCursor.pos())
         dialog.exec()
 
+    def get_current_mode_pen(self):
+        return self.draw_pen_dict[self.current_mode] if (
+                    self.current_mode and self.current_mode in self.draw_pen_dict.keys()) else self.draw_pen
+
+    def get_current_mode_brush(self):
+        return self.draw_brush_dict[self.current_mode] if (
+                    self.current_mode and self.current_mode in self.draw_brush_dict.keys()) else self.draw_brush
+
     def update_custom_pen(self, pen: QPen, brush: QBrush):
         # 更新当前画笔
-        self.draw_pen = pen
-        self.draw_brush = brush
+        if self.current_mode:
+            self.draw_pen_dict[self.current_mode] = pen
+            self.draw_brush_dict[self.current_mode] = brush
+        else:
+            self.draw_pen = pen
+            self.draw_brush = brush
 
     def switch_mode(self, mode):
         if self.current_mode == mode:
@@ -167,9 +187,13 @@ class CustomGraphicsView(QGraphicsView):
                 self.current_draw_item = QGraphicsLineItem(QLineF(self.start_pos, self.start_pos))
             elif self.current_mode == "arrow":
                 self.current_draw_item = CustomGraphicsArrowItem(QLineF(self.start_pos, self.start_pos))
-            self.current_draw_item.setPen(self.draw_pen)
-            if self.current_mode in ["pen","rect","ellipse","arrow"]:
-                self.current_draw_item.setBrush(self.draw_brush)
+            self.current_draw_item.setPen(
+                self.get_current_mode_pen()
+            )
+            if self.current_mode in ["pen", "rect", "ellipse", "arrow"]:
+                self.current_draw_item.setBrush(
+                    self.get_current_mode_brush().color()
+                )
             self.current_draw_item.setZValue(10)
             self.parent.addItem(self.current_draw_item)
         elif event.button() == Qt.MouseButton.RightButton:
