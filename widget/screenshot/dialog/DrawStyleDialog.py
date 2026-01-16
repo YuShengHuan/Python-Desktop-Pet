@@ -6,10 +6,13 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
 from PySide6.QtGui import QPen, QColor, QMouseEvent, QPixmap, QPainter, QBrush
 from PySide6.QtCore import Qt, Signal, QPoint
 
+from widget.util import WindowStatic
+
 
 class QColorButton(QPushButton):
     color_changed = Signal(QColor)
-    def __init__(self, color:QColor, parent=None):
+
+    def __init__(self, color: QColor, parent=None):
         super().__init__(parent)
         self.current_color = QColor(color)
         self.setText("")
@@ -19,21 +22,32 @@ class QColorButton(QPushButton):
         self.clicked.connect(self.choose_color)
 
     def update_style(self):
-        self.setStyleSheet('#color-btn'+'{background-color: '+self.current_color.name()+'; border: 1px solid #ccc;}"')
+        self.setStyleSheet(
+            '#color-btn' + '{background-color: ' + WindowStatic.get_color(self.current_color) + '; border: 1px solid #ccc;}')
 
     def choose_color(self):
-        color = QColorDialog.getColor(self.current_color, self, "选择颜色")
-        if color.isValid():
-            self.current_color = color
-            self.update_style()
-            self.color_changed.emit(color)
+        color_dialog = QColorDialog(self.current_color, self)
+        # 关键：启用Alpha通道显示
+        color_dialog.setOptions(QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        # 3. 弹出对话框并判断是否确认选择
+        if color_dialog.exec():
+            # 4. 获取选中的带Alpha值的颜色
+            color = color_dialog.selectedColor()
+            if color.isValid():
+                if color.alpha() == 0:
+                    color = QColor(Qt.GlobalColor.transparent)
+                self.current_color = color
+                self.update_style()
+                self.color_changed.emit(color)
+
     def get_color(self):
         return self.current_color
 
+
 # 自定义一站式画笔样式选择窗口
-class PenStyleDialog(QDialog):
+class DrawStyleDialog(QDialog):
     # 定义信号，返回选中的画笔
-    pen_confirmed = Signal(QPen)
+    pen_confirmed = Signal(QPen, QBrush)
     drag_state = {
         "is_moving": False,  # 是否正在拖拽
         "drag_offset": QPoint(0, 0)  # 鼠标相对于窗口左上角的偏移量
@@ -64,6 +78,7 @@ class PenStyleDialog(QDialog):
             self.drag_state["is_moving"] = False
             # 释放时再次触发吸附（确保最终位置贴边）
             event.accept()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 抗锯齿，让文字更平滑
@@ -77,7 +92,7 @@ class PenStyleDialog(QDialog):
             painter.setBrush(QBrush(QColor(255, 192, 203, 180)))
             painter.drawRect(self.rect())
 
-    def __init__(self, initial_pen: QPen=QPen(), parent=None):
+    def __init__(self, initial_pen: QPen = QPen(), initial_brush=QBrush(), parent=None):
         super().__init__(parent)
         self.bg_pixmap = QPixmap()
         # 替换为你的图片路径（绝对路径/相对路径均可，支持png/jpg等格式）
@@ -173,6 +188,7 @@ class PenStyleDialog(QDialog):
         )
         self.setFixedWidth(350)
         self.current_pen = initial_pen  # 初始画笔样式
+        self.current_brush = initial_brush
         self.init_ui()
 
     def init_ui(self):
@@ -229,7 +245,12 @@ class PenStyleDialog(QDialog):
         style_layout.addWidget(QLabel("线条样式："))
         self.style_combo = QComboBox()
         self.style_combo.setFixedHeight(30)
-        self.init_style_combo()
+        self.style_combo.addItem("实线", Qt.PenStyle.SolidLine)
+        self.style_combo.addItem("虚线", Qt.PenStyle.DashDotLine)  # 修正：原DashLine，按你示例格式逐行写
+        self.style_combo.addItem("点线", Qt.PenStyle.DotLine)
+        self.style_combo.addItem("点划线", Qt.PenStyle.DashDotLine)
+        self.style_combo.addItem("双点划线", Qt.PenStyle.DashDotDotLine)
+
         # 选中当前画笔样式
         current_style = self.current_pen.style()
         for i in range(self.style_combo.count()):
@@ -256,6 +277,30 @@ class PenStyleDialog(QDialog):
         cap_layout.addWidget(self.cap_combo)
         layout.addLayout(cap_layout)
 
+        # 4. 端点/拐角样式（可选，增强功能）
+        join_layout = QHBoxLayout()
+        join_layout.addWidget(QLabel("连接样式："))
+        self.join_combo = QComboBox()
+        self.join_combo.setFixedHeight(30)
+        self.join_combo.addItem("尖角", Qt.PenJoinStyle.MiterJoin)
+        self.join_combo.addItem("斜角", Qt.PenJoinStyle.BevelJoin)
+        self.join_combo.addItem("圆角", Qt.PenJoinStyle.RoundJoin)
+        # 选中当前端点样式
+        current_join = self.current_pen.joinStyle()
+        for i in range(self.cap_combo.count()):
+            if self.join_combo.itemData(i) == current_join:
+                self.join_combo.setCurrentIndex(i)
+                break
+        join_layout.addWidget(self.join_combo)
+        layout.addLayout(join_layout)
+
+        # 1. 填充颜色选择
+        brush_color_layout = QHBoxLayout()
+        brush_color_layout.addWidget(QLabel("填充颜色："))
+        self.brush_color_btn = QColorButton(self.current_brush.color())
+        brush_color_layout.addWidget(self.brush_color_btn)
+        layout.addLayout(brush_color_layout)
+
         # 5. 确认/取消按钮
         btn_layout = QHBoxLayout()
         self.ok_btn = QPushButton("确认")
@@ -270,17 +315,6 @@ class PenStyleDialog(QDialog):
         self.ok_btn.clicked.connect(self.on_ok)
         self.cancel_btn.clicked.connect(self.reject)
 
-    def init_style_combo(self):
-        pen_styles = [
-            ("实线", Qt.PenStyle.SolidLine),
-            ("虚线", Qt.PenStyle.DashLine),
-            ("点线", Qt.PenStyle.DotLine),
-            ("点划线", Qt.PenStyle.DashDotLine),
-            ("双点划线", Qt.PenStyle.DashDotDotLine)
-        ]
-        for name, style in pen_styles:
-            self.style_combo.addItem(name, style)
-
     def on_ok(self):
         # 组装选中的画笔样式
         pen = QPen()
@@ -288,7 +322,8 @@ class PenStyleDialog(QDialog):
         pen.setWidth(self.width_slider.value())
         pen.setStyle(self.style_combo.currentData())
         pen.setCapStyle(self.cap_combo.currentData())
-        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)  # 固定拐角样式，也可添加ComboBox选择
+        pen.setJoinStyle(self.join_combo.currentData())  # 固定拐角样式，也可添加ComboBox选择
+        brush = QBrush(self.brush_color_btn.get_color())
         # 发送信号
-        self.pen_confirmed.emit(pen)
+        self.pen_confirmed.emit(pen, brush)
         self.accept()  # 关闭对话框

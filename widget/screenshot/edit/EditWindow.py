@@ -552,8 +552,10 @@ class EditWindow(QWidget):
         color = QColorDialog.getColor(Qt.GlobalColor.white, self, "选择画布颜色")
         if color.isValid():
             self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
-                f"background-color: {color.name()}; border: 1px solid #ccc;")
+                f"background-color: {('transparent' if color.alpha() == 0 else color.name())}; border: 1px solid #ccc;")
             main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
+            if color.alpha() == 0:
+                color = QColor(Qt.GlobalColor.transparent)
             main_pixmap.fill(color)
             self.load_graphics_view_scene(
                 main_pixmap

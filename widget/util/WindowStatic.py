@@ -1,5 +1,6 @@
 # ========== 桌面吸附核心逻辑 ==========
 from PySide6.QtCore import QPoint, QRect
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication
 
 
@@ -18,4 +19,6 @@ def get_top_window():
         if w.objectName() == "mainWindowWindow":
             top_window = w
     return top_window
+def get_color(color:QColor):
+    return 'transparent' if color.alpha() == 0 else color.name()
 

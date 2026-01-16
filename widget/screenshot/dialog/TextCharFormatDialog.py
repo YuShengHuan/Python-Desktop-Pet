@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
 from PySide6.QtGui import QPen, QColor, QMouseEvent, QFont, QTextCharFormat, QPixmap, QPainter, QBrush
 from PySide6.QtCore import Qt, Signal, QPoint
 
+from widget.util import WindowStatic
+
 
 class TextCharFormatDialog(QDialog):
     # 定义信号，返回选中的画笔
@@ -300,20 +302,20 @@ class TextCharFormatDialog(QDialog):
         underline_color_layout.addWidget(QLabel("划线颜色"))
         self.underline_color_btn = QPushButton("")
         self.underline_color_btn.setFixedSize(50, 30)
-        self.underline_color_btn.setObjectName("color_btn")
+        self.underline_color_btn.setObjectName("underline_color_btn")
         self.underline_color_btn.setStyleSheet(
-            f"background-color: {self.current_style['underline_color'].name()}; border: 1px solid #ccc;")
+            f"background-color: {WindowStatic.get_color(self.current_style['underline_color'])}; border: 1px solid #ccc;")
         underline_color_layout.addWidget(self.underline_color_btn)
         all_color_layout.addLayout(underline_color_layout)
 
         color_layout = QHBoxLayout()
         color_layout.addWidget(QLabel("文字颜色"))
-        self.color_btn = QPushButton("")
-        self.color_btn.setFixedSize(50, 30)
-        self.color_btn.setObjectName("color_btn")
-        self.color_btn.setStyleSheet(
-            f"background-color: {self.current_style['font_color'].name()}; border: 1px solid #ccc;")
-        color_layout.addWidget(self.color_btn)
+        self.font_color_btn = QPushButton("")
+        self.font_color_btn.setFixedSize(50, 30)
+        self.font_color_btn.setObjectName("color_btn")
+        self.font_color_btn.setStyleSheet(
+            f"background-color: {WindowStatic.get_color(self.current_style['font_color'])}; border: 1px solid #ccc;")
+        color_layout.addWidget(self.font_color_btn)
         all_color_layout.addLayout(color_layout)
 
         # ========== 新增：文字背景色选择 ==========
@@ -323,7 +325,7 @@ class TextCharFormatDialog(QDialog):
         self.bg_color_btn.setFixedSize(50, 30)
         self.bg_color_btn.setObjectName("bg_color_btn")
         self.bg_color_btn.setStyleSheet(
-            f"background-color: {self.current_style['bg_color'].name()}; border: 1px solid #ccc;")
+            f"background-color: {WindowStatic.get_color(self.current_style['bg_color'])}; border: 1px solid #ccc;")
         bg_color_layout.addWidget(self.bg_color_btn)
         all_color_layout.addLayout(bg_color_layout)
 
@@ -369,7 +371,7 @@ class TextCharFormatDialog(QDialog):
         self.font_family.currentFontChanged.connect(self._update_font_family)
         self.bold_btn.toggled.connect(self._update_font_bold)
         self.italic_btn.toggled.connect(self._update_font_italic)
-        self.color_btn.clicked.connect(self._update_text_color)
+        self.font_color_btn.clicked.connect(self._update_font_color)
 
         # ========== 新增：绑定新属性的事件 ==========
         self.strikeout_btn.toggled.connect(self._update_font_strikeout)
@@ -398,16 +400,24 @@ class TextCharFormatDialog(QDialog):
     def _update_font_italic(self, is_italic):
         self.current_style["font_italic"] = is_italic
         self.update_selected_text_style()
+    def _update_color(self,key_name,btn):
+        color_dialog = QColorDialog(self.current_style[key_name], self)
+        # 关键：启用Alpha通道显示
+        color_dialog.setOptions(QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        # 3. 弹出对话框并判断是否确认选择
+        if color_dialog.exec():
+            # 4. 获取选中的带Alpha值的颜色
+            color = color_dialog.selectedColor()
+            if color.isValid():
+                if color.alpha() == 0:
+                    color = QColor(Qt.GlobalColor.transparent)
+                self.current_style[key_name] = color
+                self.update_selected_text_style()
+                btn.setStyleSheet(
+                    f"background-color: {WindowStatic.get_color(color)}; border: 1px solid #ccc;")
 
-    def _update_text_color(self):
-        color = QColorDialog.getColor(self.current_style["font_color"], self, "选择文字颜色")
-        if color.isValid():
-            self.current_style["font_color"] = color
-        else:
-            self.current_style["font_color"] = QColor(Qt.GlobalColor.transparent)
-        self.update_selected_text_style()
-        self.color_btn.setStyleSheet(
-            f"background-color: {self.current_style['font_color'].name()}; border: 1px solid #ccc;")
+    def _update_font_color(self):
+        self._update_color("font_color", self.font_color_btn)
 
     # ========== 新增：新属性的事件处理函数 ==========
     def _update_font_strikeout(self, is_strikeout):
@@ -430,24 +440,10 @@ class TextCharFormatDialog(QDialog):
         self.update_selected_text_style()
 
     def _update_underline_color(self):
-        color = QColorDialog.getColor(self.current_style["underline_color"], self, "选择划线颜色")
-        if color.isValid():
-            self.current_style["underline_color"] = color
-        else:
-            self.current_style["underline_color"] = QColor(Qt.GlobalColor.transparent)
-        self.update_selected_text_style()
-        self.underline_color_btn.setStyleSheet(
-            f"background-color: {self.current_style['underline_color'].name()}; border: 1px solid #ccc;")
+        self._update_color("underline_color", self.underline_color_btn)
 
     def _update_bg_color(self):
-        color = QColorDialog.getColor(self.current_style["bg_color"], self, "选择文字背景色")
-        if color.isValid():
-            self.current_style["bg_color"] = color
-        else:
-            self.current_style["bg_color"] = QColor(Qt.GlobalColor.transparent)
-        self.update_selected_text_style()
-        self.bg_color_btn.setStyleSheet(
-            f"background-color: {self.current_style['bg_color'].name()}; border: 1px solid #ccc;")
+        self._update_color("bg_color", self.bg_color_btn)
 
     def _update_vertical_align(self, index):
         align_map = {

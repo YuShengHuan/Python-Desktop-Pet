@@ -5,7 +5,7 @@ from PySide6.QtGui import *
 from widget.screenshot.custom.CustomGraphicsArrowItem import CustomGraphicsArrowItem
 from widget.screenshot.custom.CustomGraphicsPixmapItem import CustomGraphicsPixmapItem
 from widget.screenshot.custom.CustomGraphicsTextItem import CustomGraphicsTextItem
-from widget.screenshot.dialog.PenStyleDialog import PenStyleDialog
+from widget.screenshot.dialog.DrawStyleDialog import DrawStyleDialog
 from widget.screenshot.dialog.TextCharFormatDialog import TextCharFormatDialog
 
 
@@ -34,6 +34,9 @@ class CustomGraphicsView(QGraphicsView):
         # 绘画
         self.draw_pen = QPen()  # 手绘画笔样式
         self.init_draw_pen()  # 初始化画笔
+
+        self.draw_brush = QBrush()
+        self.init_draw_brush()  # 初始化画笔
 
         self.start_pos = None
         self.end_pos = None
@@ -71,16 +74,17 @@ class CustomGraphicsView(QGraphicsView):
 
     def open_pen_style_dialog(self):
         # 创建自定义画笔对话框，传入当前画笔
-        dialog = PenStyleDialog(self.draw_pen, self)
+        dialog = DrawStyleDialog(self.draw_pen, self.draw_brush, self)
         # 绑定确认信号
         dialog.pen_confirmed.connect(self.update_custom_pen)
         # 显示对话框
         dialog.move(QCursor.pos())
         dialog.exec()
 
-    def update_custom_pen(self, pen: QPen):
+    def update_custom_pen(self, pen: QPen, brush: QBrush):
         # 更新当前画笔
         self.draw_pen = pen
+        self.draw_brush = brush
 
     def switch_mode(self, mode):
         if self.current_mode == mode:
@@ -133,6 +137,9 @@ class CustomGraphicsView(QGraphicsView):
         self.draw_pen.setCapStyle(Qt.PenCapStyle.RoundCap)  # 线条端点圆角
         self.draw_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)  # 线条拐角圆角
 
+    def init_draw_brush(self):
+        self.draw_brush = QBrush(QColor(Qt.GlobalColor.transparent))
+
     def wheelEvent(self, event):
         """滚轮缩放视图"""
         # 计算缩放因子（每次缩放10%）
@@ -161,6 +168,7 @@ class CustomGraphicsView(QGraphicsView):
             elif self.current_mode == "arrow":
                 self.current_draw_item = CustomGraphicsArrowItem(QLineF(self.start_pos, self.start_pos))
             self.current_draw_item.setPen(self.draw_pen)
+            self.current_draw_item.setBrush(self.draw_brush)
             self.current_draw_item.setZValue(10)
             self.parent.addItem(self.current_draw_item)
         elif event.button() == Qt.MouseButton.RightButton:
