@@ -430,6 +430,8 @@ class EditWindow(QWidget):
         self.scene_history = []
         self.scene_history_index = -1
 
+        QTimer.singleShot(200, lambda: self.load_graphics_view_scene())
+
         self.mode_type = {
             "pen": self.pen_btn,
             "rect": self.rect_btn,
@@ -510,7 +512,7 @@ class EditWindow(QWidget):
         else:
             self.del_selected_item_btn.setDisabled(True)
 
-        if len(self.scene.items()) > 0:
+        if len(self.scene_history) > 0:
             self.clear_scene_btn.setDisabled(False)
         else:
             self.clear_scene_btn.setDisabled(True)
@@ -519,31 +521,24 @@ class EditWindow(QWidget):
             self.draw_style_btn.setDisabled(False)
         else:
             self.draw_style_btn.setDisabled(True)
-
-        if self.scene_history_index == 0:
-            self.forward_scene_history_btn.setDisabled(True)
-        else:
+        if self.scene_history_index > 0:
             self.forward_scene_history_btn.setDisabled(False)
-        if self.scene_history_index == len(self.scene_history) - 1:
-            self.backward_scene_history_btn.setDisabled(True)
         else:
+            self.forward_scene_history_btn.setDisabled(True)
+        if self.scene_history_index < len(self.scene_history) - 1:
             self.backward_scene_history_btn.setDisabled(False)
+        else:
+            self.backward_scene_history_btn.setDisabled(True)
 
     def forward_scene_history(self):
         if self.scene_history_index > 0:
             self.scene_history_index -= 1
         self.clear_scene_load_history_main_pixmap()
 
-    def clear_scene_load_history_main_pixmap(self, new_scene_pixmap: QPixmap = None):
-        if self.scene:
-            for item in self.scene.items():
-                if self.main_pixmap_item and item != self.main_pixmap_item:
-                    self.scene.removeItem(item)
-        if self.main_pixmap_item:
-            self.main_pixmap_item.setPixmap(
-                new_scene_pixmap if new_scene_pixmap else self.scene_history[self.scene_history_index]
-            )
-            self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+    def clear_scene_load_history_main_pixmap(self):
+        self.load_graphics_view_scene(
+            self.scene_history[self.scene_history_index]
+        )
 
     def select_scene_bg_color(self):
         color_dialog = QColorDialog(self.scene_bg_color, self)
@@ -574,8 +569,8 @@ class EditWindow(QWidget):
             )
         )
         self.scene_history.append(new_scene_pixmap)
-        self.scene_history_index = len(self.scene_history) - 1
-        self.clear_scene_load_history_main_pixmap(
+        self.scene_history_index += 1
+        self.load_graphics_view_scene(
             new_scene_pixmap
         )
 
@@ -605,15 +600,12 @@ class EditWindow(QWidget):
         self.scene_bg_color = QColor(Qt.GlobalColor.transparent)
         self.select_scene_bg_color_btn.setStyleSheet(
             f"background-color: {WindowStatic.get_color(self.scene_bg_color)}; border: 1px solid #ccc;")
+        self.scene_history.clear()
+        self.scene_history_index = -1
         self.load_graphics_view_scene()
 
     def load_graphics_view_scene(self, main_pixmap: QPixmap = None):
-        # 1. 清空场景中旧的图形项（图片+文字），避免残留
         self.scene.clear()
-        self.main_pixmap_item = None
-        self.scene_history.clear()
-        self.scene_history_index = -1
-
         # 3. 创建新的图片项并添加到场景
         if main_pixmap:
             byte_array = QByteArray()
@@ -629,10 +621,10 @@ class EditWindow(QWidget):
             pixmap_rect = QRect(0, 0,
                                 self.main_pixmap.width(),
                                 self.main_pixmap.height())
-            self.main_pixmap_item = QGraphicsPixmapItem(self.main_pixmap)
-            self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-            self.main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
-            self.scene.addItem(self.main_pixmap_item)
+            main_pixmap_item = QGraphicsPixmapItem(self.main_pixmap)
+            main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            main_pixmap_item.setPos(0, 0)  # 强制图片在场景原点
+            self.scene.addItem(main_pixmap_item)
 
             # 关键1：将场景尺寸设置为图片的实际尺寸，消除场景与图片的尺寸差
             self.scene.setSceneRect(pixmap_rect)
@@ -650,7 +642,6 @@ class EditWindow(QWidget):
             self.custom_view.resetTransform()
             # 关键3：基于图片项的边界适配视图，而非场景Rect（更精准）
             self.custom_view.fitInView(pixmap_rect, Qt.AspectRatioMode.KeepAspectRatio)
-        self.save_scene_history()
 
     def add_text_to_scene(self):
         """添加文字到图片（优化：支持即时应用当前属性）"""
@@ -752,6 +743,7 @@ class EditWindow(QWidget):
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
 
+#
 # app = QApplication(sys.argv)
 # w = EditWindow()
 # w.show()
