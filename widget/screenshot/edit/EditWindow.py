@@ -515,6 +515,11 @@ class EditWindow(QWidget):
         else:
             self.clear_scene_btn.setDisabled(True)
 
+        if self.custom_view.get_current_mode():
+            self.draw_style_btn.setDisabled(False)
+        else:
+            self.draw_style_btn.setDisabled(True)
+
         if self.scene_history_index == 0:
             self.forward_scene_history_btn.setDisabled(True)
         else:
@@ -746,7 +751,6 @@ class EditWindow(QWidget):
             # 图片加载失败时，降级绘制半透明矩形
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
-
 
 # app = QApplication(sys.argv)
 # w = EditWindow()

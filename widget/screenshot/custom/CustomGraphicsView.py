@@ -114,6 +114,8 @@ class CustomGraphicsView(QGraphicsView):
 
         self.model_changed.emit(self.current_mode, mode)
         self.current_mode = mode
+    def get_current_mode(self):
+        return self.current_mode
 
     def add_text_to_scene(self, text):
         """添加文字到图片（优化：支持即时应用当前属性）"""
