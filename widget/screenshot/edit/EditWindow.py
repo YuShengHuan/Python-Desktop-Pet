@@ -101,7 +101,7 @@ class EditWindow(QWidget):
                 Qt.TransformationMode.SmoothTransformation  # 平滑缩放，抗锯齿
             )
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        #self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(self.width(), 500)
         self.setObjectName("editWindow")
 
@@ -270,28 +270,30 @@ class EditWindow(QWidget):
         self.top_operate_bar.setContentsMargins(5, 0, 5, 3)
         self.top_operate_bar.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        self.load_picture_btn = QPushButton("加载图片")
-        self.load_picture_btn.setObjectName("load_picture_btn")
-        self.load_picture_btn.setFixedSize(70, 30)
-        self.load_picture_btn.clicked.connect(self.load_picture_to_view)
-        self.top_operate_bar.addWidget(self.load_picture_btn)
+        self.select_scene_bg_btn = QPushButton()
+        self.select_scene_bg_btn.setObjectName("select_scene_bg_btn")
+        self.select_scene_bg_btn.setIcon(QIcon("image/icon/select_scene_bg_btn.png"))
+        self.select_scene_bg_btn.setFixedSize(30, 30)
+        self.select_scene_bg_btn.setToolTip("选择场景背景")
+        self.select_scene_bg_btn.clicked.connect(self.select_scene_bg_to_view)
+        self.top_operate_bar.addWidget(self.select_scene_bg_btn)
 
-        self.select_scene_main_pixmap_fill_color_btn = QPushButton("")
-        self.select_scene_main_pixmap_fill_color_btn.setFixedSize(50, 30)
-        self.select_scene_main_pixmap_fill_color_btn.setObjectName("color_btn")
-        self.select_scene_main_pixmap_fill_color_btn.clicked.connect(self.select_scene_main_pixmap_fill_color)
-        self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
+        self.select_scene_bg_color_btn = QPushButton()
+        self.select_scene_bg_color_btn.setFixedSize(30, 30)
+        self.select_scene_bg_color_btn.setObjectName("select_scene_bg_color_btn")
+        self.select_scene_bg_color_btn.clicked.connect(self.select_scene_bg_color)
+        self.select_scene_bg_color_btn.setToolTip("选择场景颜色")
+        self.select_scene_bg_color_btn.setStyleSheet(
             f"background-color: {Qt.GlobalColor.white.name}; border: 1px solid #ccc;")
-        self.top_operate_bar.addWidget(self.select_scene_main_pixmap_fill_color_btn)
+        self.top_operate_bar.addWidget(self.select_scene_bg_color_btn)
 
-        self.clear_scene_btn = QPushButton("清除")
+        self.clear_scene_btn = QPushButton()
         self.clear_scene_btn.setObjectName("clear_scene_btn")
-        self.clear_scene_btn.setIcon(QIcon("image/icon/clear_scene_btn"))
-        self.clear_scene_btn.setFixedSize(50, 30)
+        self.clear_scene_btn.setIcon(QIcon("image/icon/clear_scene_btn.png"))
+        self.clear_scene_btn.setToolTip("清除场景")
+        self.clear_scene_btn.setFixedSize(30, 30)
         self.clear_scene_btn.clicked.connect(self.clear_picture_to_view)
         self.top_operate_bar.addWidget(self.clear_scene_btn)
-
-
 
         self.scene_history_operatebar = QHBoxLayout()
         self.scene_history_operatebar.setSpacing(0)
@@ -301,6 +303,7 @@ class EditWindow(QWidget):
         self.forward_scene_history_btn = QPushButton("")
         self.forward_scene_history_btn.setIcon(QIcon("image/icon/forward_scene_history_btn.png"))
         self.forward_scene_history_btn.setFixedSize(30, 30)
+        self.forward_scene_history_btn.setToolTip("前进场景")
         self.forward_scene_history_btn.setObjectName("forward_scene_history_btn")
         self.forward_scene_history_btn.clicked.connect(self.forward_scene_history)
         self.scene_history_operatebar.addWidget(self.forward_scene_history_btn)
@@ -308,6 +311,7 @@ class EditWindow(QWidget):
         self.save_scene_history_btn = QPushButton("")
         self.save_scene_history_btn.setIcon(QIcon("image/icon/save_scene_history_btn.png"))
         self.save_scene_history_btn.setFixedSize(30, 30)
+        self.save_scene_history_btn.setToolTip("保存场景历史")
         self.save_scene_history_btn.setObjectName("save_scene_history_btn")
         self.save_scene_history_btn.clicked.connect(self.save_scene_history)
         self.scene_history_operatebar.addWidget(self.save_scene_history_btn)
@@ -315,6 +319,7 @@ class EditWindow(QWidget):
         self.backward_scene_history_btn = QPushButton("")
         self.backward_scene_history_btn.setIcon(QIcon("image/icon/backward_scene_history_btn.png"))
         self.backward_scene_history_btn.setFixedSize(30, 30)
+        self.backward_scene_history_btn.setToolTip("回退场景")
         self.backward_scene_history_btn.setObjectName("backward_scene_history_btn")
         self.backward_scene_history_btn.clicked.connect(self.backward_scene_history)
         self.scene_history_operatebar.addWidget(self.backward_scene_history_btn)
@@ -322,105 +327,94 @@ class EditWindow(QWidget):
         self.top_operate_bar.addLayout(
             self.scene_history_operatebar
         )
-        self.top_operate_bar.addStretch()
 
         self.text_style_btn = QPushButton()
         self.text_style_btn.setIcon(QIcon("image/icon/text_style_btn.png"))
         self.text_style_btn.setFixedSize(30, 30)
-        self.text_style_btn.setObjectName("pen_style_btn")
-
+        self.text_style_btn.setToolTip("选择文字样式")
+        self.text_style_btn.setObjectName("text_style_btn")
         self.top_operate_bar.addWidget(self.text_style_btn)
 
-        self.pen_style_btn = QPushButton()
-        self.pen_style_btn.setFixedSize(30, 30)
-        self.pen_style_btn.setObjectName("pen_style_btn")
-        self.pen_style_btn.setIcon(QIcon("image/icon/pen_style_btn.png"))
-        self.top_operate_bar.addWidget(self.pen_style_btn)
+        self.draw_style_btn = QPushButton()
+        self.draw_style_btn.setFixedSize(30, 30)
+        self.draw_style_btn.setObjectName("draw_style_btn")
+        self.draw_style_btn.setToolTip("选择涂画样式")
+        self.draw_style_btn.setIcon(QIcon("image/icon/draw_style_btn.png"))
+        self.top_operate_bar.addWidget(self.draw_style_btn)
 
         self.save_picture_btn = QPushButton()
         self.save_picture_btn.setIcon(QIcon("image/icon/save_picture_btn.png"))
         self.save_picture_btn.setFixedSize(30, 30)
         self.save_picture_btn.clicked.connect(self.save_image)
         self.save_picture_btn.setObjectName("save_btn")
+        self.save_picture_btn.setToolTip("保存图片")
         self.top_operate_bar.addWidget(self.save_picture_btn)
 
         self.copy_picture_btn = QPushButton()
         self.copy_picture_btn.setIcon(QIcon("image/icon/copy_picture_btn.png"))
         self.copy_picture_btn.setFixedSize(30, 30)
         self.copy_picture_btn.setObjectName("copy_btn")
+        self.copy_picture_btn.setToolTip("复制图片")
         self.copy_picture_btn.clicked.connect(self.copy_image)
         self.top_operate_bar.addWidget(self.copy_picture_btn)
-
-        self.main_layout.addLayout(
-            self.top_operate_bar
-        )
-
-        # ========== 工具栏容器（拆分为上下两栏） ==========
-        self.tool_container = QWidget()
-        self.tool_container_layout = QVBoxLayout(self.tool_container)
-        self.tool_container_layout.setContentsMargins(5, 0, 5, 3)
-        self.tool_container_layout.setSpacing(10)  # 上下栏间距
-        self.main_layout.addWidget(self.tool_container)
-
-        self.top_toolbar = QHBoxLayout()
-        self.top_toolbar.setSpacing(10)
-        self.top_toolbar.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # ------ 上工具栏：功能操作（名称/功能按钮） ------
-
-        # 上栏控件：文字输入框、添加文字、删除文字、保存图片
-        self.text_edit = QLineEdit()
-        self.text_edit.setPlaceholderText("输入文字")
-        self.text_edit.setFixedSize(150, 30)
-        self.top_toolbar.addWidget(self.text_edit)
 
         self.add_text_btn = QPushButton()
         self.add_text_btn.setFixedSize(30, 30)
         self.add_text_btn.setObjectName("add_text_btn")
         self.add_text_btn.setIcon(QIcon("image/icon/add_text_btn.png"))
+        self.add_text_btn.setToolTip("添加文字")
         self.add_text_btn.clicked.connect(self.add_text_to_scene)
-        self.top_toolbar.addWidget(self.add_text_btn)
+        self.top_operate_bar.addWidget(self.add_text_btn)
 
         self.add_picture_btn = QPushButton()
         self.add_picture_btn.setFixedSize(30, 30)
         self.add_picture_btn.setObjectName("add_pixmap_btn")
+        self.add_picture_btn.setToolTip("添加图片")
         self.add_picture_btn.setIcon(QIcon("image/icon/add_picture_btn.png"))
         self.add_picture_btn.clicked.connect(self.add_pixmap_to_scene)
-        self.top_toolbar.addWidget(self.add_picture_btn)
+        self.top_operate_bar.addWidget(self.add_picture_btn)
 
         self.del_selected_item_btn = QPushButton()
         self.del_selected_item_btn.setFixedSize(30, 30)
-        self.del_selected_item_btn.setObjectName("del_text_btn")
+        self.del_selected_item_btn.setObjectName("del_selected_item_btn")
+        self.del_selected_item_btn.setToolTip("删除场景选中项")
         self.del_selected_item_btn.setIcon(QIcon("image/icon/del_selected_item_btn.png"))
         self.del_selected_item_btn.clicked.connect(self.delete_selected_item)
-        self.top_toolbar.addWidget(self.del_selected_item_btn)
+        self.top_operate_bar.addWidget(self.del_selected_item_btn)
 
-        self.top_toolbar.addStretch()
         self.pen_btn = QPushButton()
         self.pen_btn.setIcon(QIcon("image/icon/pen_btn.png"))
         self.pen_btn.setFixedSize(30, 30)
-        self.top_toolbar.addWidget(self.pen_btn)
+        self.pen_btn.setToolTip("画笔")
+        self.top_operate_bar.addWidget(self.pen_btn)
 
         self.rect_btn = QPushButton()
         self.rect_btn.setIcon(QIcon("image/icon/rect_btn.png"))
         self.rect_btn.setFixedSize(30, 30)
-        self.top_toolbar.addWidget(self.rect_btn)
+        self.rect_btn.setToolTip("矩形")
+        self.top_operate_bar.addWidget(self.rect_btn)
 
         self.circle_btn = QPushButton()
         self.circle_btn.setIcon(QIcon("image/icon/circle_btn.png"))
         self.circle_btn.setFixedSize(30, 30)
-        self.top_toolbar.addWidget(self.circle_btn)
+        self.circle_btn.setToolTip("圆")
+        self.top_operate_bar.addWidget(self.circle_btn)
 
         self.line_btn = QPushButton()
         self.line_btn.setIcon(QIcon("image/icon/line_btn.png"))
         self.line_btn.setFixedSize(30, 30)
-        self.top_toolbar.addWidget(self.line_btn)
+        self.line_btn.setToolTip("线")
+        self.top_operate_bar.addWidget(self.line_btn)
 
         self.arrow_btn = QPushButton()
         self.arrow_btn.setIcon(QIcon("image/icon/arrow_btn.png"))
+        self.arrow_btn.setToolTip("箭头")
         self.arrow_btn.setFixedSize(30, 30)
-        self.top_toolbar.addWidget(self.arrow_btn)
+        self.top_operate_bar.addWidget(self.arrow_btn)
 
-        self.tool_container_layout.addLayout(self.top_toolbar)
+        self.main_layout.addLayout(
+            self.top_operate_bar
+        )
 
         # 1. 创建场景（初始大小可设为0，后续更新）
         self.scene = QGraphicsScene()
@@ -440,7 +434,7 @@ class EditWindow(QWidget):
             "rect": self.rect_btn,
             "ellipse": self.circle_btn,
             "line": self.line_btn,
-            "arrow":self.arrow_btn
+            "arrow": self.arrow_btn
         }
         for mode, btn in self.mode_type.items():
             btn.clicked.connect(lambda checked=False, mode=mode: self.custom_view.switch_mode(mode))
@@ -502,7 +496,7 @@ class EditWindow(QWidget):
 
         self.custom_view.model_changed.connect(model_changed)
 
-        self.pen_style_btn.clicked.connect(self.custom_view.open_pen_style_dialog)
+        self.draw_style_btn.clicked.connect(self.custom_view.open_pen_style_dialog)
         self.text_style_btn.clicked.connect(self.custom_view.open_text_char_format_dialog)
 
         def init_graphics():
@@ -549,16 +543,17 @@ class EditWindow(QWidget):
             )
             self.main_pixmap_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
-    def select_scene_main_pixmap_fill_color(self):
+    def select_scene_bg_color(self):
         color_dialog = QColorDialog(Qt.GlobalColor.white, self)
         # 3. 弹出对话框并判断是否确认选择
         if color_dialog.exec():
             # 4. 获取选中的带Alpha值的颜色
             color = color_dialog.selectedColor()
             if color.isValid():
-                self.select_scene_main_pixmap_fill_color_btn.setStyleSheet(
+                self.select_scene_bg_color_btn.setStyleSheet(
                     f"background-color: {color.name()}; border: 1px solid #ccc;")
                 main_pixmap = QPixmap(self.custom_view.width(), self.custom_view.height())
+                main_pixmap.fill(color)
                 self.load_graphics_view_scene(
                     main_pixmap
                 )
@@ -593,7 +588,7 @@ class EditWindow(QWidget):
         self.add_file_dir = os.path.dirname(file_img_path)
         return file_img_path
 
-    def load_picture_to_view(self):
+    def select_scene_bg_to_view(self):
         # 若用户取消选择，直接返回
         file_img_path = self.select_image()
         if not file_img_path:
@@ -652,11 +647,10 @@ class EditWindow(QWidget):
 
     def add_text_to_scene(self):
         """添加文字到图片（优化：支持即时应用当前属性）"""
-        text = self.text_edit.text().strip()
+        text = "添加文字"
         orign_icon = self.add_text_btn.icon()
         if len(text) > 0:
             self.custom_view.add_text_to_scene(text)
-            self.text_edit.clear()
             self.add_text_btn.setIcon(QIcon("image/icon/success.png"))
         else:
             self.add_text_btn.setIcon(QIcon("image/icon/fail.png"))

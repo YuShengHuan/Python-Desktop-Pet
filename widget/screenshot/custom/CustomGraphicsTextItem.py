@@ -14,20 +14,19 @@ class CustomGraphicsTextItem(QGraphicsTextItem):
         self.open_edit = False
         self.first_init = True
         self.setPlainText(text)
-
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.setSelected(True)
         super().mousePressEvent(event)  # 保证文本选中功能正常
 
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        if not self.open_edit:
-            self.open_edit = True
-            self.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
-            self.setCursor(Qt.CursorShape.IBeamCursor)
-        else:
+        if self.open_edit:
             self.open_edit = False
             self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
             self.setCursor(Qt.CursorShape.OpenHandCursor)
+        else:
+            self.open_edit = True
+            self.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
+            self.setCursor(Qt.CursorShape.IBeamCursor)
         self.update()
 
     def mouse_leave_range(self):
