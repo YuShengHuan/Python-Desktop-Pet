@@ -2,24 +2,26 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
+from PySide6.QtCore import Qt, QRectF, QPointF, QLineF
+from PySide6.QtGui import QPainter, QPen, QBrush, QPolygonF, QPainterPath
+from PySide6.QtWidgets import QGraphicsItem
+
 
 class CustomGraphicsArrowItem(QGraphicsItem):
-
     def __init__(self, line: QLineF = QLineF(), parent: QGraphicsItem = None):
         super().__init__(parent)
-        # 核心：用QLineF存储线条（和QGraphicsLineItem一致）
-
         self._line = QLineF(line)
-        # 箭头头部宽度
-        self.Arrow_Head_Height = 5
-        self.Arrow_Head_Width = 7
 
-        self._arrow_head_height = self.Arrow_Head_Height
-        self._arrow_head_width = self.Arrow_Head_Width
-        # 标准化Pen/Brush（使用PySide6完整枚举路径初始化）
+        # 核心比例：箭身细，箭头宽（关键区别铅笔）
+        self.BODY_WIDTH_RATIO = 5  # 箭身宽度 = 画笔宽度 × 1（细）
+        self.ARROW_WIDTH_RATIO = 8  # 箭头宽度 = 画笔宽度 × 5（宽）
+        self.ARROW_LENGTH_RATIO = 0.20  # 箭头长度占总长度比例（15%）
+        self.BODY_LENGTH_RATIO = 1 - self.ARROW_LENGTH_RATIO  # 箭身占剩余长度
+
+        # 标准化Pen/Brush
         self._pen = QPen()
         self._brush = QBrush()
-        self.origin_pen_width = self._pen.width()
+        self._pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
 
         # 交互特性
         self.setFlags(
@@ -28,7 +30,7 @@ class CustomGraphicsArrowItem(QGraphicsItem):
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
 
-    # --------------------- 对齐QGraphicsLineItem的核心接口 ---------------------
+    # --------------------- 原有接口完全保留 ---------------------
     def setLine(self, line: QLineF):
         if self._line == line:
             return
@@ -59,7 +61,6 @@ class CustomGraphicsArrowItem(QGraphicsItem):
     def endPoint(self) -> QPointF:
         return self._line.p2()
 
-    # --------------------- 标准化Pen/Brush接口 ---------------------
     def setPen(self, pen: QPen):
         if self._pen == pen:
             return
@@ -69,6 +70,7 @@ class CustomGraphicsArrowItem(QGraphicsItem):
 
     def pen(self) -> QPen:
         return self._pen
+
     def setBrush(self, brush: QBrush):
         if self._brush == brush:
             return
@@ -79,98 +81,89 @@ class CustomGraphicsArrowItem(QGraphicsItem):
     def brush(self) -> QBrush:
         return self._brush
 
-    # --------------------- 箭头宽度自定义 ---------------------
-    def setArrowHeadWidth(self, width: float):
-        if self._arrow_head_height == width:
-            return
-        self.prepareGeometryChange()
-        self._arrow_head_height = width
-        self.update()
-
-    def arrowHeadWidth(self) -> float:
-        return self._arrow_head_height
-
-    # --------------------- 核心绘制/几何方法 ---------------------
-    def boundingRect(self) -> QRectF:
-        line_rect = QRectF(self._line.p1(), self._line.p2()).normalized()
-        expand = self._arrow_head_height + self._pen.width()
-        return line_rect.adjusted(-expand, -expand, expand, expand)
-
-    def shape(self) -> QPainterPath:
-        path = QPainterPath()
-        arrow_body = self._calculate_body_head()
-        path.moveTo(arrow_body.p1())
-        path.lineTo(arrow_body.p2())
-        arrow_head = self._calculate_arrow_head()
-        path.addPolygon(arrow_head)
-        return path
-
-    def paint(self, painter: QPainter, option, widget=None):
-        if self._line.isNull():
-            return
-        # 设置Pen/Brush
-        pen_width = self._pen.width()
-        pen = QPen(self._pen)
-        pen.setWidthF(self._arrow_head_height * 0.8)
-        painter.setPen(pen)
-        painter.setBrush(self._brush)
-        # 1. 绘制基础线条
-        arrow_body = self._calculate_body_head()
-        painter.drawLine(arrow_body)
-
-        # 2. 绘制箭头头部
-        pen.setWidthF(1)
-        origin_pen_width_rate = pen_width / self.origin_pen_width
-        self._arrow_head_height = self.Arrow_Head_Height * origin_pen_width_rate
-        self._arrow_head_width = self.Arrow_Head_Width * origin_pen_width_rate
-        painter.setPen(pen)
-        arrow_head = self._calculate_arrow_head()
-        painter.drawPolygon(arrow_head)
-
-        # 选中状态样式（使用完整枚举路径）
-        if self.isSelected():
-            selected_pen = QPen(
-                Qt.GlobalColor.blue,
-                pen.width() + 1,
-                Qt.PenStyle.DashLine  # 修正：完整枚举路径
-            )
-            painter.setPen(selected_pen)
-            painter.setBrush(Qt.BrushStyle.NoBrush)  # 修正：完整枚举路径
-            painter.drawRect(self.boundingRect().adjusted(2, 2, -2, -2))
-
-
-    def _calculate_body_head(self) -> QLineF:
-        p1 = self._line.p1()
-        p2 = self._line.p2()
-
-        # 处理起点终点重合的情况
-        if p1 == p2:
-            return QLineF()
-
-        # 计算p1到p2的方向向量并归一化
-        line_vector = p2 - p1
-        line_length = line_vector.manhattanLength()
-        line_vector_normalized = line_vector / line_length
-
-        # 从p2往回减去箭头宽度得到p3
-        p3 = p2 - line_vector_normalized * self._arrow_head_width
-
-        # 返回p1到p3的线段（箭身段）
-        return QLineF(p1, p3)
-
-    def _calculate_arrow_head(self) -> QPolygonF:
-        p1 = self._line.p1()
-        p2 = self._line.p2()
-
+    # --------------------- 核心修正：计算宽头细身的箭头多边形 ---------------------
+    def _calculate_arrow_polygon(self) -> QPolygonF:
+        p1 = self._line.p1()  # 箭身起点
+        p2 = self._line.p2()  # 箭头尖端
         if p1 == p2:
             return QPolygonF()
 
+        # 1. 基础计算
+        total_length = self._line.length()
+        pen_width = self._pen.width() if self._pen.width() > 0 else 1
+
+        # 宽度分离：箭身细，箭头宽
+        body_width = pen_width * self.BODY_WIDTH_RATIO
+        arrow_width = pen_width * self.ARROW_WIDTH_RATIO
+        # 长度分配
+        body_length = total_length * self.BODY_LENGTH_RATIO
+        arrow_length = total_length * self.ARROW_LENGTH_RATIO
+
+        # 2. 方向向量（归一化）
         line_vector = p2 - p1
-        line_vector_normalized = line_vector / line_vector.manhattanLength()
+        line_vector_normalized = line_vector / total_length
+        # 垂直向量（用于计算左右边界）
         perpendicular_vector = QPointF(-line_vector_normalized.y(), line_vector_normalized.x())
 
-        arrow_tip = p2
-        arrow_base1 = arrow_tip - line_vector_normalized * self._arrow_head_width - perpendicular_vector * self._arrow_head_height
-        arrow_base2 = arrow_tip - line_vector_normalized * self._arrow_head_width + perpendicular_vector * self._arrow_head_height
+        # 3. 关键点位
+        body_end = p1 + line_vector_normalized * body_length  # 箭身终点 = 箭头底座起点
+        arrow_tip = p2  # 箭头尖端
 
-        return QPolygonF([arrow_tip, arrow_base1, arrow_base2])
+        # 4. 箭身矩形顶点（细）
+        body_top = p1 + perpendicular_vector * (body_width / 2)
+        body_bottom = p1 - perpendicular_vector * (body_width / 2)
+        body_end_top = body_end + perpendicular_vector * (body_width / 2)
+        body_end_bottom = body_end - perpendicular_vector * (body_width / 2)
+
+        # 5. 箭头三角形顶点（宽，底边宽于箭身）
+        arrow_base_top = body_end + perpendicular_vector * (arrow_width / 2)
+        arrow_base_bottom = body_end - perpendicular_vector * (arrow_width / 2)
+
+        # 6. 组合成闭合多边形（箭身细矩形 + 箭头宽三角形）
+        polygon = QPolygonF([
+            body_top, body_bottom, body_end_bottom,
+            arrow_base_bottom, arrow_tip, arrow_base_top,
+            body_end_top, body_top
+        ])
+        return polygon
+
+    # --------------------- 几何方法 ---------------------
+    def boundingRect(self) -> QRectF:
+        polygon = self._calculate_arrow_polygon()
+        if polygon.isEmpty():
+            line_rect = QRectF(self._line.p1(), self._line.p2()).normalized()
+            expand = self._pen.width() * 3
+            return line_rect.adjusted(-expand, -expand, expand, expand)
+        return polygon.boundingRect().adjusted(-2, -2, 2, 2)
+
+    def shape(self) -> QPainterPath:
+        path = QPainterPath()
+        polygon = self._calculate_arrow_polygon()
+        if not polygon.isEmpty():
+            path.addPolygon(polygon)
+        return path
+
+    # --------------------- 绘制：一次性画整体箭头 ---------------------
+    def paint(self, painter: QPainter, option, widget=None):
+        if self._line.isNull():
+            return
+
+        painter.setPen(self._pen)
+        painter.setBrush(self._brush)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 绘制宽头细身的整体箭头
+        arrow_polygon = self._calculate_arrow_polygon()
+        if not arrow_polygon.isEmpty():
+            painter.drawPolygon(arrow_polygon)
+
+        # 选中状态
+        if self.isSelected():
+            selected_pen = QPen(
+                Qt.GlobalColor.blue,
+                self._pen.width() + 1,
+                Qt.PenStyle.DashLine
+            )
+            painter.setPen(selected_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRect(self.boundingRect().adjusted(2, 2, -2, -2))

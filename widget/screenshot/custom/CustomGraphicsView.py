@@ -168,7 +168,8 @@ class CustomGraphicsView(QGraphicsView):
             elif self.current_mode == "arrow":
                 self.current_draw_item = CustomGraphicsArrowItem(QLineF(self.start_pos, self.start_pos))
             self.current_draw_item.setPen(self.draw_pen)
-            self.current_draw_item.setBrush(self.draw_brush)
+            if self.current_mode in ["pen","rect","ellipse","arrow"]:
+                self.current_draw_item.setBrush(self.draw_brush)
             self.current_draw_item.setZValue(10)
             self.parent.addItem(self.current_draw_item)
         elif event.button() == Qt.MouseButton.RightButton:
