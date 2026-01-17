@@ -573,11 +573,7 @@ class EditWindow(QWidget):
         )
 
     def save_scene_history(self):
-        new_scene_pixmap = QPixmap.fromImage(
-            self.scene_to_image(
-                self.scene
-            )
-        )
+        new_scene_pixmap = self.scene_to_pixmap(self.scene)
         self.scene_history.append(new_scene_pixmap)
         self.scene_history_index += 1
         self.load_history_main_pixmap(
@@ -679,10 +675,10 @@ class EditWindow(QWidget):
             self.scene.removeItem(item)
             del item
 
-    def scene_to_image(self, scene: QGraphicsScene, format=QImage.Format.Format_RGBA8888):
-        image = QImage(scene.sceneRect().size().toSize(), format)
-        image.fill(self.scene_bg_color)  # 背景设为白色
-        painter = QPainter(image)
+    def scene_to_pixmap(self, scene: QGraphicsScene):
+        pixmap = QPixmap(scene.sceneRect().size().toSize())
+        pixmap.fill(self.scene_bg_color)
+        painter = QPainter(pixmap)
         # 1. 基础抗锯齿（必开）
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
@@ -694,7 +690,8 @@ class EditWindow(QWidget):
         # ========== 渲染场景 ==========
         scene.render(painter)
         painter.end()
-        return image
+
+        return pixmap
 
     def save_image(self):
         """保存编辑后的图片（优化：添加保存成功提示）"""
@@ -710,12 +707,8 @@ class EditWindow(QWidget):
         orign_icon = self.save_picture_btn.icon()
         try:
             # 创建与场景大小一致的图片
-            image = self.scene_to_image(self.scene)
-            # 保存图片
-            if filter_type == "JPG图片 (*.jpg)":
-                # JPG不支持透明，转换为RGB格式
-                image = image.convertToFormat(QImage.Format.Format_RGB888)
-            image.save(file_path)
+            pixmap = self.scene_to_pixmap(self.scene)
+            pixmap.save(file_path)
 
             self.save_picture_btn.setIcon(QIcon("image/icon/success.png"))
             print("成功", f"图片已保存到：\n{file_path}")
@@ -727,9 +720,8 @@ class EditWindow(QWidget):
     def copy_image(self):
         orign_icon = self.copy_picture_btn.icon()
         try:
-            image = self.scene_to_image(self.scene)
+            pixmap = self.scene_to_pixmap(self.scene)
             clipboard = QApplication.clipboard()  # 获取系统剪贴板
-            pixmap = QPixmap.fromImage(image)  # QImage转QPixmap
             clipboard.setPixmap(pixmap)  # 写入剪贴板
 
             self.copy_picture_btn.setIcon(QIcon("image/icon/success.png"))
@@ -753,7 +745,6 @@ class EditWindow(QWidget):
             painter.setBrush(QBrush(QColor(0, 0, 0, 25)))
             painter.drawRect(self.rect())
 
-#
 # app = QApplication(sys.argv)
 # w = EditWindow()
 # w.show()
