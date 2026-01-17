@@ -430,8 +430,6 @@ class EditWindow(QWidget):
         self.scene_history = []
         self.scene_history_index = -1
 
-        QTimer.singleShot(200, lambda: self.load_graphics_view_scene())
-
         self.mode_type = {
             "pen": self.pen_btn,
             "rect": self.rect_btn,
