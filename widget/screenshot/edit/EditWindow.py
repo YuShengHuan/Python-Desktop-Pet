@@ -533,12 +533,22 @@ class EditWindow(QWidget):
     def forward_scene_history(self):
         if self.scene_history_index > 0:
             self.scene_history_index -= 1
-        self.clear_scene_load_history_main_pixmap()
-
-    def clear_scene_load_history_main_pixmap(self):
-        self.load_graphics_view_scene(
+        self.load_history_main_pixmap(
             self.scene_history[self.scene_history_index]
         )
+
+    def load_history_main_pixmap(self, new_scene_pixmap):
+        main_scene_bg = self.scene.items()[0]
+        if len(self.scene.items()) > 0 and isinstance(main_scene_bg, QGraphicsPixmapItem):
+            main_scene_bg.setPixmap(new_scene_pixmap)
+            main_scene_bg.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+            for item in self.scene.items():
+                if item != main_scene_bg:
+                    self.scene.removeItem(item)
+        else:
+            self.load_graphics_view_scene(
+                new_scene_pixmap
+            )
 
     def select_scene_bg_color(self):
         color_dialog = QColorDialog(self.scene_bg_color, self)
@@ -560,7 +570,9 @@ class EditWindow(QWidget):
     def backward_scene_history(self):
         if self.scene_history_index < len(self.scene_history) - 1:
             self.scene_history_index += 1
-        self.clear_scene_load_history_main_pixmap()
+        self.load_history_main_pixmap(
+            self.scene_history[self.scene_history_index]
+        )
 
     def save_scene_history(self):
         new_scene_pixmap = QPixmap.fromImage(
@@ -570,7 +582,7 @@ class EditWindow(QWidget):
         )
         self.scene_history.append(new_scene_pixmap)
         self.scene_history_index += 1
-        self.load_graphics_view_scene(
+        self.load_history_main_pixmap(
             new_scene_pixmap
         )
 
